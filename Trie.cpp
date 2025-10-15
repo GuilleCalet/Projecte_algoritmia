@@ -52,48 +52,45 @@ public:
     node->terminal += 1; // augmentar ocurrencias
   }
 
-  // Elimina, si existe, la palabra del Trie
-  bool eliminate(const std::string& word) {
-    Node* node = root;
 
-    // Path que hay que seguir para encontrar la palabra buscada
-    std::vector<std::pair<Node*,int>> path; // (parent, idx del hijo tomado)
-
-    // Descenso por el Trie guardando el path
-    for (char ch : word) {
-      int idx = ch - 'a';
-      if (not existsChild(node, ch)) return false; // la palabra no existe
-      path.push_back(pair(node,idx));
-      node = node->children[idx];
+  // Funció recursiva per eliminar la paraula
+ bool eliminateAux(Node* node, const std::string& word, int index) {
+    // Cas base: hem arribat al final de la paraula
+    if (index == word.size()) {
+        if (node->terminal > 0) {
+            node->terminal -= 1; // Decrementem les ocurrències
+            // Si el node no té fills, el podem eliminar
+            return !hasChildren(node);
+        }
+        return false; // La paraula no existeix
     }
 
-    // La palabra debe existir en el nodo hoja
-    if (node->terminal == 0) return false;
-    node->terminal -= 1; // Si existe, decrementar ocurrencias
-
-    // No hace falta borrar ningún nodo cuando:
-    //  - aún quedan ocurrencias de la palabra
-    //  - la palabra = word es prefijo de otra (tiene hijos)
-    if (node->terminal > 0 or hasChildren(node)) return true;
-
-    // Ascenso por el Trie borrando nodos innecesarios hasta encontrar:
-    //  - un nodo con terminal>0 (palabra más corta que debemos preservar)
-    //  - un nodo que tenga algún otro hijo
-    for (int i = path.size() - 1; i >= 0; i--) {
-      Node* parent = path[i].first; // nodo padre
-      int idx = path[i].second; // índice del hijo tomado
-      Node* curr = parent->children[idx]; // nodo hijo
-
-      // Si el nodo actual sigue siendo necesario, dejamos de eliminar nodos
-      if (curr->terminal > 0 or hasChildren(curr)) return true;
-
-      // En caso contrario lo eliminamos (liberamos memoria)
-      delete curr;
-      parent->children[idx] = nullptr;
+    // Obtenim l'índex de la lletra actual
+    int idx = word[index] - 'a';
+    
+    // Si no existeix el fill, la paraula no està al trie
+    if (!existsChild(node, word[index])) {
+        return false;
     }
 
-    return true;
-  }
+    // Recursió sobre el node fill
+    bool shouldDeleteChild = eliminateAux(node->children[idx], word, index + 1);
+
+    if (shouldDeleteChild) {
+        // Si el fill es pot eliminar, alliberem la memòria i esborramos la referència
+        delete node->children[idx];
+        node->children[idx] = nullptr;
+
+        // Si aquest node actual no té fills ni més paraules, també es pot eliminar
+        return node->terminal == 0 && !hasChildren(node);
+    }
+
+    return false;
+ }
+
+ bool eliminate(const std::string& word) {
+    return eliminateAux(root, word, 0);
+ }
 
   // Comprueba si el Trie contiene la palabra
   bool search(const std::string& word) {
