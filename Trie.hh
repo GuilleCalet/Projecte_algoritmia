@@ -7,7 +7,7 @@
   class Trie {
   private:
 
-    // Estructura de un nodo del Trie
+    // Estructura de un nodo del Trie.
     struct Node {
       std::vector<Node*> children{26, nullptr}; // punteros a los hijos
       int terminal = 0; // contador de nºrepeticiones de la palabra
