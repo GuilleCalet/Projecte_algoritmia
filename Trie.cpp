@@ -7,24 +7,24 @@ using namespace std;
 class Trie {
 private:
 
-  // Estructura de un nodo del Trie
+  // Estructura d'un node del Trie
   struct Node {
-    std::vector<Node*> children{26, nullptr}; // punteros a los hijos
-    int terminal = 0; // contador de nºrepeticiones de la palabra
+    std::vector<Node*> children{26, nullptr}; // punters als fills
+    int terminal = 0; // contador del nºrepeticions de la paraula
   };
 
-  Node* root = nullptr; // raíz del Trie
+  Node* root = nullptr; // arrel del Trie
 
-  // Convierte un carácter en un índice normalizado (normaliza a minúsculas)
+  // Transforma un caràcter en un índex normalitzat (normalitza a minúsculas)
   static int ctoi(char ch) {};
 
-  // Comprueba si en un nodo existe el hijo ch
+  // Comprova si en un node existeix el fill 'ch'
   static bool existsChild(const Node* node, char ch) {
     int idx = ch - 'a';
     return (node->children[idx] != nullptr);
   }
 
-  // Comprueba si un nodo tiene hijos
+  // Comprova si un node té fills actius
   static bool hasChildren(const Node* node) {
     for (const Node* child : node->children) {
       if (child != nullptr) return true;
@@ -38,18 +38,18 @@ public:
   // Destructor
   ~Trie();
 
-  // Inserta la palabra en el Trie
+  // Inserta una paraula al Tire
   void insert(const std::string& word) {
     Node* node = root;
 
     for (char ch : word) {
       int idx = ch - 'a';
-      // Si un nodo no contiene el hijo ch correspondiente, lo crea
+      // Si un node no conté el fill 'ch' corresponent, el crea
       if (not existsChild(node, ch)) node->children[idx] = new Node;
       node = node->children[idx];
     }
 
-    node->terminal += 1; // augmentar ocurrencias
+    node->terminal += 1; // augmentar ocurrències
   }
 
 
@@ -92,17 +92,17 @@ public:
     return eliminateAux(root, word, 0);
  }
 
-  // Comprueba si el Trie contiene la palabra
+  // Comprova si el Trie conté la paraula buscada
   bool search(const std::string& word) {
     Node* node = root;
 
     for (char ch : word) {
       int idx = ch - 'a'; 
-      if (not existsChild(node, ch)) return false; // la palabra no existe
+      if (not existsChild(node, ch)) return false; // la paraula no existeix
       node = node->children[idx];
     }
 
-    // Comprueba si la palabra existe en el nodo hoja
+    // Comprova si la paraula coincideix amb un final de paraula
     return (node->terminal > 0);
   }
 };
