@@ -51,8 +51,7 @@ void read_file(string route) {
 }
 
 int main(int argc, char* argv[]) {
-  T = Trie();
-
+  
   if (argc < 2) {
     cout << "Uso: " << argv[0] << " [archivo1.txt] [archivo2.txt ...]\n";
     
