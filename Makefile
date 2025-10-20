@@ -1,6 +1,9 @@
-all: clean program
+all: clean compile
 
-program: main.o Trie.o
+execute: compile program
+	./program
+
+compile: main.o Trie.o
 	g++ -o program main.o Trie.o
 
 main.o: main.cpp
