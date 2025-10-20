@@ -65,5 +65,5 @@
     \pre La string word només té caràcters alfabètics previament nomalitzats
     \post Retorna cert si la paraula "word" és al trie, retorna fals en cas contrari
     */
-    vector<int> search(const string& word); 
+    vector<int> search(const string& word, long long&ns); 
   };

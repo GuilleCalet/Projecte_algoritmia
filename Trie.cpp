@@ -3,6 +3,7 @@
 #include <cctype>
 #include <algorithm>
 #include <stack>
+#include<chrono>
 #include <utility>
 
 using namespace std;
@@ -167,7 +168,9 @@ bool Trie::eliminate(const string& word, int line) {
 }
 
 // Comprueba si el Trie contiene la palabra
-vector<int> Trie::search(const string& word) {
+vector<int> Trie::search(const string& word, long long&ns) {
+  using clock = std::chrono::high_resolution_clock;
+  auto t0 = clock::now();
   Node* node = root;
 
   for (char ch : word) {
@@ -181,5 +184,7 @@ vector<int> Trie::search(const string& word) {
   }
 
   // Comprueba si la palabra acaba en un nodo de final de palabra
+  auto t1 = clock::now();
+  ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
   return (node->lines.size() > 0) ? node->lines : vector<int>();
 }
