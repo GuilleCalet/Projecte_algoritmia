@@ -1,178 +1,137 @@
-  #include <iostream>
-  #include <fstream>
-  #include <chrono>
-  #include "RadixTrie.hh"
-  #include"Trie.hh"
+#include <iostream>
+#include <fstream>
+#include <chrono>
+#include "RadixTrie.hh"
+#include"Trie.hh"
 
-  using namespace std;
+using namespace std;
 
-  Trie T;
-  RadixTrie T2;
-  int eleccion;
+Trie T; // eleccion:(1)
+RadixTrie RT; // eleccion:(2)
 
-  /*void read_konsole() {
+int eleccion;
+
+void read_konsole(auto& time) {
+  time = 0; // asegurarnos de que hemos reiniciado el timer
+  string text;
+
+  int line = 0;
+  cout << "Escribe un texto a analizar (puedes detener la entrada escribiendo '/' en una linea individualmente):\n";
+  while(getline(cin, text) and text != "/") {
+    line++;
     string word;
-
-    cout << "Escribe un texto a analizar (puedes detener la entrada con '/'):\n";
-    char ch;
-    while(cin.get(ch) and ch != '/') {
+    for (char ch : text) {
       if (isalpha(ch)) word.push_back(tolower(ch));
-      else if (word.size() > 0) {
-        T.insert(word);
+      else if (ch == ' ' and word.size() > 0) {
+        auto t0 = std::chrono::high_resolution_clock::now();
+        (eleccion == 1) ? T.insert(word, line) : RT.insert(word, line);
+        auto t1 = std::chrono::high_resolution_clock::now();
+        auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+        time += ns;
         word.clear();
         word.shrink_to_fit();
       }
     }
-    if (word.size() > 0) T.insert(word);
-
-    cin.clear();
-    return;
-  }*/
-
-  void read_konsole() {
-    string text;
-    int line = 0;
-
-    cout << "Escribe un texto a analizar (puedes detener la entrada escribiendo '/' en una linea individualmente):\n";
-    while(getline(cin, text) and text != "/") {
-      line++;
-      string word;
-
-      for (char ch : text) {
-        if (isalpha(ch)) word.push_back(tolower(ch));
-        else if (ch == ' ' and word.size() > 0) {
-          if ( eleccion == 1 ) T.insert(word, line);
-          else T2.insert(word, line);
-          word.clear();
-          word.shrink_to_fit();
-        }
-      }
-      
-      if (word.size() > 0) {
-        if ( eleccion == 1 )T.insert(word, line);
-        else T2.insert(word, line);
-      }
-      
-    }
-
-    cin.clear();
-    return;
-  }
-
-  /*void read_file(string route) {
-    ifstream file;
-    string word;
-
-    // Abrimos el fichero adjunto para leerlo
-    file.open(route, ios::in); 
-
-    if (file.fail()) { // comprobación de errores al abrir el fichero
-      cout << "Error: el archivo no se ha podido abrir" << endl;
-      exit(1);
-    }
-
-    // Leemos todo el fichero por carácteres
-    char ch;
-    while (file.get(ch) and not file.eof()) { 
-      if (isalpha(ch)) word.push_back(tolower(ch));
-      else if (word.size() > 0) {
-        T.insert(word);
-        word.clear();
-        word.shrink_to_fit();
-      }
-    }
-
-    // Cerramos el fichero
-    file.close(); 
-    return;
-  }*/
-
-  void read_file(string route) {
-
-    ifstream file;
-
-    // Abrimos el fichero adjunto para leerlo
-    file.open(route, ios::in); 
-
-    if (file.fail()) { // comprobación de errores al abrir el fichero
-      cout << "Error: el archivo no se ha podido abrir" << endl;
-      exit(1);
-    }
-
-    // Leemos todo el fichero por líneas
-    string text;
-    int line = 0;
-    while(getline(file, text)) {
-      line++;
-      string word;
-
-      for (char ch : text) {
-        if (isalpha(ch)) word.push_back(tolower(ch));
-        else if (ch == ' ' and word.size() > 0) {
-          if ( eleccion == 1 )T.insert(word, line);
-          else T2.insert(word, line);
-          word.clear();
-          word.shrink_to_fit();
-        }
-      }
-      
-      if (word.size() > 0) {
-          if ( eleccion == 1 )T.insert(word, line);
-          else T2.insert(word, line);
-      }
-    }
-
-    // Cerramos el fichero
-    file.close(); 
-    return;
-  }
-
-  int main(int argc, char* argv[]) {
     
-    cout<<"Para usar Basic Trie pulse (1):"<<endl;
-    cout<<"Para usar Radix Trie pulse (2):"<<endl;
-    cout<<"Cual quieres usar?: ";
-    cin>>eleccion;
-    
-    if (argc < 2) {
-      cout << "Uso: " << argv[0] << " [archivo1.txt]\n";
-
-      char order;
-      cout << "Quieres introducir un texto manualmente? [y/n]: ";
-      while(cin >> order and tolower(order) != 'y') {
-        if (tolower(order) == 'n') return 0;
-      }
-
-      read_konsole();
-    }
-    else{
+    if (word.size() > 0) {
       auto t0 = std::chrono::high_resolution_clock::now();
-      read_file(argv[1]);
+      (eleccion == 1) ? T.insert(word, line) : RT.insert(word, line);
       auto t1 = std::chrono::high_resolution_clock::now();
-      auto ns = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-      cout << "Generar el arbol  ha tardado " << ns << " ms"<<endl;
-    } 
+      auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+      time += ns;
+    }
+  }
 
+  cin.clear();
+  return;
+}
+
+void read_file(string route, auto& time) {
+  time = 0; // asegurarnos de que hemos reiniciado el timer
+  ifstream file;
+
+  // Abrimos el fichero adjunto para leerlo
+  file.open(route, ios::in); 
+  if (file.fail()) { // comprobación de errores al abrir el fichero
+    cout << "Error: el archivo no se ha podido abrir" << endl;
+    exit(1);
+  }
+
+  // Leemos todo el fichero por líneas
+  string text;
+  int line = 0;
+  while(getline(file, text)) {
+    line++;
     string word;
-    cout << "Que palabra quieres consultar (minúsculas)?\n -> "; 
-    while(cin >> word) {
-      long long ns = 0;
-      vector<int> occur;
-      if ( eleccion == 1 ) occur = T.search(word,ns);
-      else  occur = T2.search(word,ns);
-      
-      if (occur.size() == 0) cout << "No se ha encontrado la palabra " << word << "!!\n";
-      else {
-        cout << "La palabra " << word << " se ha encontrado en las líneas: [";
-        for (int i = 0; i < occur.size(); i++) {
-          if (i > 0) cout << ", ";
-          cout << occur[i];
-        }
-        cout << "] num: " << occur.size() << "\n";
+    for (char ch : text) {
+      if (isalpha(ch)) word.push_back(tolower(ch));
+      else if (ch == ' ' and word.size() > 0) {
+        auto t0 = std::chrono::high_resolution_clock::now();
+        (eleccion == 1) ? T.insert(word, line) : RT.insert(word, line);
+        auto t1 = std::chrono::high_resolution_clock::now();
+        auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+        time += ns;
+        word.clear();
+        word.shrink_to_fit();
       }
-      cout << "La busqueda ha tardado " << ns << " ns"<<endl;
-      cout << "-> ";
     }
     
-    return 0;
+    if (word.size() > 0) {
+      auto t0 = std::chrono::high_resolution_clock::now();
+      (eleccion == 1) ? T.insert(word, line) : RT.insert(word, line);
+      auto t1 = std::chrono::high_resolution_clock::now();
+      auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+      time += ns;
+    }
   }
+
+  // Cerramos el fichero
+  file.close();
+  return;
+}
+
+int main(int argc, char* argv[]) {
+  cout << "Para usar Basic Trie pulse (1)\n";
+  cout << "Para usar Radix Trie pulse (2)\n";
+  cout << "Cual quieres usar?: ";
+  cin >> eleccion;
+  
+  if (argc < 2) {
+    cout << "Uso: " << argv[0] << " [archivo1.txt]\n";
+    char order;
+    cout << "Quieres introducir un texto manualmente? [y/n]: ";
+    while(cin >> order and tolower(order) != 'y') {
+      if (tolower(order) == 'n') return 0;
+    }
+    auto time = 0; // reiniciar el timer
+    read_konsole(time);
+    cout << "Generar el arbol  ha tardado " << time << " ns\n";
+  }
+  else {
+    auto time = 0; // reiniciar el timer
+    read_file(argv[1], time);
+    cout << "Generar el arbol  ha tardado " << time << " ns\n";
+  }
+
+  string word;
+  cout << "Que palabra quieres consultar (minúsculas)?\n -> "; 
+  while(cin >> word) {
+    auto t0 = std::chrono::high_resolution_clock::now();
+    vector<int> occur = (eleccion == 1) ? T.search(word) : RT.search(word);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto time = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+    if (occur.size() == 0) cout << "No se ha encontrado la palabra " << word << "!!\n";
+    else {
+      cout << "La palabra " << word << " se ha encontrado en las líneas: [";
+      for (int i = 0; i < occur.size(); i++) {
+        if (i > 0) cout << ", ";
+        cout << occur[i];
+      }
+      cout << "] num: " << occur.size() << "\n";
+    }
+    cout << "La busqueda ha tardado " << time << " ns"<<endl;
+    cout << "-> ";
+  }
+  
+  return 0;
+}
