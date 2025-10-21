@@ -34,7 +34,7 @@ bool RadixTrie::hasChild(const Node* n) {
   return false;
 }
 
-void RadixTrie::insert(const string& w, int line) {
+void RadixTrie::insert(const string& w, int line, size_t position) {
   if (w.empty()) return;
   // validación de caracteres
   for (char ch : w) { 
@@ -49,7 +49,7 @@ void RadixTrie::insert(const string& w, int line) {
     if (!edge) {
       // no hay arista: creamos una que cuelga todo el sufijo restante
       edge = new Edge{ w.substr(i), new Node };
-      edge->child->lines.push_back(line);
+      edge->child->positions.push_back(make_pair(line, position));  // Guardar la posición
       return;
     }
     // existe arista, comparamos etiqueta
@@ -78,21 +78,21 @@ void RadixTrie::insert(const string& w, int line) {
 
     if (wordSuffix.empty()) {
       // 3a) la palabra termina justo en mid
-      mid->lines.push_back(line);
+      mid->positions.push_back(make_pair(line, position));  // Guardar la posición
       return;
     } else {
       // 3b) añadimos una nueva arista para el sufijo de la palabra hacia un nuevo nodo final
       int idxNew = ctoi(wordSuffix[0]);
       mid->edges[idxNew] = new Edge{ wordSuffix, new Node };
-      mid->edges[idxNew]->child->lines.push_back(line);
+      mid->edges[idxNew]->child->positions.push_back(make_pair(line, position));  // Guardar la posición
       return;
     }
   }
   // i == w.size(): la palabra acaba exactamente en `node`
-  node->lines.push_back(line);
+  node->positions.push_back(make_pair(line, position));  // Guardar la posición
 }
 
-vector<int> RadixTrie::search(const string& w, long long&ns) const {
+std::vector<std::pair<int, size_t>> RadixTrie::search(const string& w, long long&ns) const {
     using clock = std::chrono::high_resolution_clock;
    auto t0 = clock::now();
       
@@ -121,5 +121,5 @@ vector<int> RadixTrie::search(const string& w, long long&ns) const {
   }
     auto t1 = clock::now();
   ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
-  return node->lines; // si no es palabra final, lines estará vacío
+  return node->positions; // si no es palabra final, lines estará vacío
 }

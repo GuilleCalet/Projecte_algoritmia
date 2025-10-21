@@ -49,7 +49,7 @@ Trie::~Trie() {
 
 /*** operaciones públicas ***/
 // Inserta la palabra en el Trie
-void Trie::insert(const string& word, int line) {
+void Trie::insert(const string& word, int line, size_t position) {
   Node* node = root;
 
   for (char ch : word) {
@@ -63,9 +63,9 @@ void Trie::insert(const string& word, int line) {
     node = node->children[idx];
   }
 
-  node->lines.push_back(line); // insertar la linea donde aparece
+  node->positions.push_back(make_pair(line, position));  // Guardar la línea y la posición
 }
-
+/*
 // Elimina, si existe, la palabra del Trie (todas las ocurrencias)
 bool Trie::eliminate(const string& word) {
   Node* node = root;
@@ -166,9 +166,9 @@ bool Trie::eliminate(const string& word, int line) {
 
   return true;
 }
-
+*/
 // Comprueba si el Trie contiene la palabra
-vector<int> Trie::search(const string& word, long long&ns) {
+vector<pair<int, size_t>> Trie::search(const string& word, long long&ns) {
   using clock = std::chrono::high_resolution_clock;
   auto t0 = clock::now();
   Node* node = root;
@@ -177,14 +177,14 @@ vector<int> Trie::search(const string& word, long long&ns) {
     int idx = ctoi(ch);
     if (idx < 0 or idx >= 26) {
       cerr << "Error: la palabra buscada " << word << " tiene carácteres no compatibles\n";
-      return vector<int>(); // ignora palabras con carácteres no alfabéticos
+      return {}; // ignora palabras con carácteres no alfabéticos
     }
-    if (not existsChild(node, idx)) return vector<int>(); // la palabra no existe
+    if (not existsChild(node, idx)) return {}; // la palabra no existe
     node = node->children[idx];
   }
 
   // Comprueba si la palabra acaba en un nodo de final de palabra
   auto t1 = clock::now();
   ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
-  return (node->lines.size() > 0) ? node->lines : vector<int>();
+  return node->positions;  // Retornar las posiciones (líneas y posiciones dentro de las líneas)
 }

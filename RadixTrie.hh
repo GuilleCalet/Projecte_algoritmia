@@ -14,7 +14,7 @@ class RadixTrie {
   };
   struct Node {
     // Como en el trie original, guardamos en los nodos finales el vector de líneas
-    std::vector<int> lines;           
+    std::vector<std::pair<int, size_t>> positions;  // (línea, posición de la palabra)       
     // En un radix trie, desde un nodo no puede haber dos aristas que empiecen por la misma letra
     // Usamos array indexado por 'a'..'z' para acceso O(1)
     std::array<Edge*,26> edges{};     // punteros nulos por defecto
@@ -27,9 +27,9 @@ public:
   ~RadixTrie();
 
   // Inserta todas las apariciones (puede insertar repetidas) de `word` en la línea `line`.
-  void insert(const std::string& word, int line);
+  void insert(const std::string& word, int line, size_t position);
   // Devuelve las líneas donde aparece exactamente `word`. Si no existe, vector vacío.
-  std::vector<int> search(const std::string& word, long long&ns) const;
+  std::vector<std::pair<int, size_t>> search(const std::string& word, long long&ns) const;
 
 private:
   static inline int ctoi(char ch) {

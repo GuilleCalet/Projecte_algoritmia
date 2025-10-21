@@ -1,6 +1,7 @@
   #include <iostream>
   #include <string>
   #include <vector>
+  #include <array>
 
   using namespace std;
 
@@ -10,7 +11,7 @@
     // Estructura de un nodo del Trie.
     struct Node {
       vector<Node*> children{26, nullptr}; // punteros a los hijos
-      vector<int> lines; // en que líneas aparece la palabra
+      vector<pair<int, size_t>> positions;  // (línea, posición de la palabra en la línea)
     };
 
     Node* root = nullptr; // raíz del Trie
@@ -52,18 +53,18 @@
     \pre La string word només té caràcters alfabètics previament nomalitzats
     \post El trie conté la paraula "word", si ja contenia la paraula, incrementa el seu contador de repeticions
     */
-    void insert(const string& word, int line);
+    void insert(const string& word, int line, size_t position);
 
     /** @brief Elimina la paraula "word" del trie
     \pre  La string word només té caràcters alfabètics previament nomalitzats
     \post Si la paraula estava al trie, l'elimina, si no estava retorna fals
     */
-    bool eliminate(const string& word);
-    bool eliminate(const string& word, int line);
+    //bool eliminate(const string& word);
+    //bool eliminate(const string& word, int line);
 
     /** @brief Comproba si el Trie conté la paraula "word"
     \pre La string word només té caràcters alfabètics previament nomalitzats
     \post Retorna cert si la paraula "word" és al trie, retorna fals en cas contrari
     */
-    vector<int> search(const string& word, long long&ns); 
+    vector<pair<int, size_t>> search(const string& word, long long&ns); 
   };
