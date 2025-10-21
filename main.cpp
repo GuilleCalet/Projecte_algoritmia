@@ -23,18 +23,18 @@ void read_file(string route) {
 
     string text;
     int line = 0;
+    size_t word_position = 0;
     while (getline(file, text)) {
         line++;
-        string word;
-        size_t word_position = 0;  
+        string word;  
 
         for (char ch : text) {
             if (isalpha(ch)) word.push_back(tolower(ch));
             else if (ch == ' ' and word.size() > 0) {
+                word_position++;
                 if (eleccion == 1) T.insert(word, line, word_position);  // Usar T (Basic Trie)
                 else T2.insert(word, line, word_position);  // Usar T2 (Radix Trie)
                 word.clear();
-                word_position++;
                 word.shrink_to_fit();
             }
         }
@@ -95,7 +95,7 @@ vector<int> search_phrase(TType& trie, const string& phrase) {
 
             // Buscar la palabra en la línea y asegurarse de que esté después de la posición anterior
             for (auto& word_pos : word_positions) {
-                if (word_pos.first == prev_line && word_pos.second == (prev_position + 1)) {
+                if ( word_pos.second == (prev_position + 1)) {
                     temp_positions.push_back(word_pos);
                     found_in_order = true;
                     break;
