@@ -36,22 +36,29 @@ bool RadixTrie::hasChild(const Node* n) {
 
 void RadixTrie::insert(const string& w, int line, size_t position) {
   if (w.empty()) return;
+
   // validación de caracteres
   for (char ch : w) { 
     int idx = ctoi(ch); 
-    if (idx < 0 || idx >= 26) return;
- }
+    if (idx < 0 || idx >= 26) {
+      cerr << "Error: la palabra " << w << " no se ha podido insertar porque tiene carácteres no alfabéticos\n";
+      return; // ignora palabras con carácteres no alfabéticos
+    }
+  }
+
   Node* node = root;
-    size_t i = 0;
+  size_t i = 0;
   while (i < w.size()) {
     int idx = ctoi(w[i]);
     Edge* &edge = node->edges[idx];
+    
     if (!edge) {
       // no hay arista: creamos una que cuelga todo el sufijo restante
       edge = new Edge{ w.substr(i), new Node };
       edge->child->positions.push_back(make_pair(line, position));  // Guardar la posición
       return;
     }
+
     // existe arista, comparamos etiqueta
     size_t k = lcp(w.substr(i), edge->label);
     if (k == edge->label.size()) {
@@ -60,6 +67,7 @@ void RadixTrie::insert(const string& w, int line, size_t position) {
       node = edge->child; 
       continue;
     }
+
     // split en 3 casos: común k, resto de arista, y resto de palabra
     Node* mid = new Node;
     // 1) la parte común pasa a ser la etiqueta de la arista original hacia mid
@@ -88,6 +96,7 @@ void RadixTrie::insert(const string& w, int line, size_t position) {
       return;
     }
   }
+
   // i == w.size(): la palabra acaba exactamente en `node`
   node->positions.push_back(make_pair(line, position));  // Guardar la posición
 }
@@ -101,22 +110,22 @@ std::vector<std::pair<int, size_t>> RadixTrie::search(const string& w, long long
     return {};
   };
   for (char ch : w) {
-     int idx = ctoi(ch);
-      if (idx < 0 || idx >= 26) {
-        ns = 0 ; 
-        return {};
-      } 
-    }
+    int idx = ctoi(ch);
+    if (idx < 0 || idx >= 26) {
+      cerr << "Error: la palabra buscada " << w << " tiene carácteres no compatibles\n";
+      return {}; // ignora palabras con carácteres no alfabéticos
+    } 
+  }
 
   Node* node = root;
   size_t i = 0;
   while (i < w.size()) {
     int idx = ctoi(w[i]);
     Edge* e = node->edges[idx];
-    if (!e){ ns = 0 ; return {};}
+    if (!e) return {};
     size_t k = lcp(w.substr(i), e->label);
-    if (k < e->label.size()) return {};             // nos paramos a mitad de etiqueta => palabra inexistente
-    i += k;                                         // consumimos etiqueta
+    if (k < e->label.size()) return {}; // nos paramos a mitad de etiqueta => palabra inexistente
+    i += k; // consumimos etiqueta
     node = e->child;
   }
     auto t1 = clock::now();
