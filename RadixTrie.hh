@@ -32,6 +32,7 @@ public:
   // Devuelve las líneas donde aparece exactamente `word`. Si no existe, vector vacío.
   int search(const std::string& word, long long&ns) const;
 
+  std::vector<int> explore_subtree(const std::string& prefix);
 private:
   static inline int ctoi(char ch) {
     unsigned char uch = static_cast<unsigned char>(ch);

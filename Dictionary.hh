@@ -14,12 +14,6 @@ public:
     int line;
     long long pos;
 
-    bool operator<(const Match& other) const {
-      return ((line < other.line) or (line == other.line and pos < other.pos));
-    }
-    bool operator==(const Match& other) const {
-      return (line == other.line and pos == other.pos);
-    }
   };
 
 private:

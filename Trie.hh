@@ -13,7 +13,7 @@
     // Estructura de un nodo del Trie.
     struct Node {
       unordered_map<char, Node*> children;// punteros a los hijos
-      int wordID;
+      int wordID = -1;
     };
 
     Node* root = nullptr; // raíz del Trie
@@ -48,5 +48,7 @@
     \pre La string word només té caràcters alfabètics previament nomalitzats
     \post Retorna cert si la paraula "word" és al trie, retorna fals en cas contrari
     */
-    int search(const string& word, long long&ns); 
+    int search(const string& word, long long&ns);
+
+    vector<int> explore_subtree(const string& prefix);
   };

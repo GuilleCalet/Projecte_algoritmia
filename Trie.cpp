@@ -70,3 +70,37 @@ int Trie::search(const string& word, long long&ns) {
   ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
   return node->wordID;  // Retornar las posiciones (líneas y posiciones dentro de las líneas)
 }
+
+vector<int> Trie::explore_subtree(const string& prefix) {
+    vector<int> wordIDs;
+    Node* node = root;
+
+    // Buscar el nodo correspondiente al último carácter del prefijo
+    for (char ch : prefix) {
+        if (node->children.find(ch) == node->children.end()) {
+            return {};  // No se encuentra el prefijo en el Trie
+        }
+        node = node->children.at(ch);
+    }
+
+    // Recorrer el subárbol a partir de este nodo
+    stack<Node*> nodes;
+    nodes.push(node);
+
+    while (!nodes.empty()) {
+        Node* currentNode = nodes.top();
+        nodes.pop();
+
+        // Si el nodo es un nodo final de palabra, agregar su wordID
+        if (currentNode->wordID != -1) {
+            wordIDs.push_back(currentNode->wordID);
+        }
+
+        // Añadir todos los hijos del nodo actual a la pila
+        for (auto& child : currentNode->children) {
+            nodes.push(child.second);
+        }
+    }
+
+    return wordIDs;
+}
