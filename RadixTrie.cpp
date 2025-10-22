@@ -29,6 +29,13 @@ size_t RadixTrie::lcp(const string& a, const string& b) {
   return k;
 }
 
+size_t RadixTrie::matchLabel(const std::string& w, size_t i, const std::string& label) {
+    size_t k = 0, m = std::min(label.size(), w.size() - i);
+    while (k < m && w[i + k] == label[k]) ++k;
+    return k;
+}
+
+
 bool RadixTrie::hasChild(const Node* n) {
   for (const Edge* e : n->edges) if (e) return true; 
   return false;
@@ -60,7 +67,9 @@ void RadixTrie::insert(const string& w, int line, size_t position) {
     }
 
     // existe arista, comparamos etiqueta
-    size_t k = lcp(w.substr(i), edge->label);
+    
+    size_t k = matchLabel(w, i, edge->label); //( con este vamos mas rápido )
+  //size_t k = lcp(w.substr(i), edge->label);
     if (k == edge->label.size()) {
       // consumimos arista completa y seguimos abajo
       i += k; 
@@ -123,7 +132,8 @@ std::vector<std::pair<int, size_t>> RadixTrie::search(const string& w, long long
     int idx = ctoi(w[i]);
     Edge* e = node->edges[idx];
     if (!e) return {};
-    size_t k = lcp(w.substr(i), e->label);
+  size_t k = matchLabel(w, i, e->label); //( con este va mas rápido )
+  //  size_t k = lcp(w.substr(i), e->label);
     if (k < e->label.size()) return {}; // nos paramos a mitad de etiqueta => palabra inexistente
     i += k; // consumimos etiqueta
     node = e->child;

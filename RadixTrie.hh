@@ -37,6 +37,8 @@ private:
     return std::tolower(uch) - 'a';
   }
   static size_t lcp(const std::string& a, const std::string& b); // longest common prefix
+  static size_t matchLabel(const std::string& w, size_t i, const std::string& label); // longest common prefix
+
 
   // Utilidades de gestión de memoria/estructura
   static void destroy(Node* n);
