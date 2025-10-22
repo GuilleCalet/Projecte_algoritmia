@@ -14,12 +14,13 @@ RadixTrie::RadixTrie() : root(new Node) {}
 
 RadixTrie::~RadixTrie() { destroy(root); root = nullptr; }
 
-void RadixTrie::destroy(Node* n) {
-  if (!n) return;
-  for (Edge* e : n->edges) {
-    if (e) { destroy(e->child); delete e; }
-  }
-  delete n;
+void RadixTrie::destroy(Node* node) {
+    if (!node) return;
+    for (auto& e : node->edges) {
+        destroy(e.second->child);  // Destruir los hijos
+        delete e.second;  // Eliminar la arista
+    }
+    delete node;
 }
 
 size_t RadixTrie::lcp(const string& a, const string& b) {
@@ -41,104 +42,54 @@ bool RadixTrie::hasChild(const Node* n) {
   return false;
 }
 
-void RadixTrie::insert(const string& w, int line, size_t position) {
+void RadixTrie::insert(const string& w, int ID) {
   if (w.empty()) return;
+    Node* node = root;
+    size_t i = 0;
+    while (i < w.size()) {
+        char ch = w[i];
+        if (node->edges.find(ch) == node->edges.end()) {
+            node->edges[ch] = new Edge{w.substr(i), new Node};
+            node->edges[ch]->child->wordID = ID;
+            return;
+        }
+        size_t k = std::min(w.size() - i, node->edges[ch]->label.size());
+        std::string common = w.substr(i, k);
+        if (common == node->edges[ch]->label) {
+            node = node->edges[ch]->child;
+            i += k;
+            continue;
+        }
 
-  // validación de caracteres
-  for (char ch : w) { 
-    int idx = ctoi(ch); 
-    if (idx < 0 || idx >= 26) {
-      cerr << "Error: la palabra " << w << " no se ha podido insertar porque tiene carácteres no alfabéticos\n";
-      return; // ignora palabras con carácteres no alfabéticos
+        // Aquí hacemos la separación si el sufijo no coincide completamente
+        std::string edgeSuffix = node->edges[ch]->label.substr(k);
+        node->edges[ch]->label = common;
+
+        Node* mid = new Node;
+        node->edges[ch]->child = mid;
+        mid->edges[edgeSuffix[0]] = new Edge{edgeSuffix, new Node};
+        mid->edges[edgeSuffix[0]]->child->wordID = ID;
+        return;
     }
-  }
-
-  Node* node = root;
-  size_t i = 0;
-  while (i < w.size()) {
-    int idx = ctoi(w[i]);
-    Edge* &edge = node->edges[idx];
-    
-    if (!edge) {
-      // no hay arista: creamos una que cuelga todo el sufijo restante
-      edge = new Edge{ w.substr(i), new Node };
-      edge->child->positions.push_back(make_pair(line, position));  // Guardar la posición
-      return;
-    }
-
-    // existe arista, comparamos etiqueta
-    
-    size_t k = matchLabel(w, i, edge->label); //( con este vamos mas rápido )
-  //size_t k = lcp(w.substr(i), edge->label);
-    if (k == edge->label.size()) {
-      // consumimos arista completa y seguimos abajo
-      i += k; 
-      node = edge->child; 
-      continue;
-    }
-
-    // split en 3 casos: común k, resto de arista, y resto de palabra
-    Node* mid = new Node;
-    // 1) la parte común pasa a ser la etiqueta de la arista original hacia mid
-    string common = edge->label.substr(0, k);
-    string edgeSuffix = edge->label.substr(k);
-    string wordSuffix = w.substr(i + k);
-
-    // reusar el objeto Edge existente para que siga en su misma casilla (idx)
-    Node* oldChild = edge->child;
-    edge->label = common;
-    edge->child = mid;
-
-    // 2) colgamos la parte antigua (edgeSuffix) desde mid hacia oldChild
-    int idxOld = ctoi(edgeSuffix[0]);
-    mid->edges[idxOld] = new Edge{ edgeSuffix, oldChild };
-
-    if (wordSuffix.empty()) {
-      // 3a) la palabra termina justo en mid
-      mid->positions.push_back(make_pair(line, position));  // Guardar la posición
-      return;
-    } else {
-      // 3b) añadimos una nueva arista para el sufijo de la palabra hacia un nuevo nodo final
-      int idxNew = ctoi(wordSuffix[0]);
-      mid->edges[idxNew] = new Edge{ wordSuffix, new Node };
-      mid->edges[idxNew]->child->positions.push_back(make_pair(line, position));  // Guardar la posición
-      return;
-    }
-  }
-
-  // i == w.size(): la palabra acaba exactamente en `node`
-  node->positions.push_back(make_pair(line, position));  // Guardar la posición
+    node->wordID;
 }
 
-std::vector<std::pair<int, size_t>> RadixTrie::search(const string& w, long long&ns) const {
+int RadixTrie::search(const string& w, long long&ns) const {
     using clock = std::chrono::high_resolution_clock;
    auto t0 = clock::now();
-      
-  if (w.empty())  {
-    ns = 0;
-    return {};
-  };
-  for (char ch : w) {
-    int idx = ctoi(ch);
-    if (idx < 0 || idx >= 26) {
-      cerr << "Error: la palabra buscada " << w << " tiene carácteres no compatibles\n";
-      return {}; // ignora palabras con carácteres no alfabéticos
-    } 
-  }
 
-  Node* node = root;
-  size_t i = 0;
-  while (i < w.size()) {
-    int idx = ctoi(w[i]);
-    Edge* e = node->edges[idx];
-    if (!e) return {};
-  size_t k = matchLabel(w, i, e->label); //( con este va mas rápido )
-  //  size_t k = lcp(w.substr(i), e->label);
-    if (k < e->label.size()) return {}; // nos paramos a mitad de etiqueta => palabra inexistente
-    i += k; // consumimos etiqueta
-    node = e->child;
-  }
+   Node* node = root;
+    size_t i = 0;
+    while (i < w.size()) {
+        char ch = w[i];
+        if (node->edges.find(ch) == node->edges.end()) return -1;  // No encontrado
+        size_t k = std::min(w.size() - i, node->edges[ch]->label.size());
+        if (w.substr(i, k) != node->edges[ch]->label) return -1;  // No coincide la palabra
+        i += k;
+        node = node->edges[ch]->child;
+    }
+  
     auto t1 = clock::now();
   ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
-  return node->positions; // si no es palabra final, lines estará vacío
+  return node->wordID; // si no es palabra final, lines estará vacío
 }
