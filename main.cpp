@@ -168,6 +168,17 @@ int main(int argc, char* argv[]) {
     auto ns = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
     cout << "Generar el árbol ha tardado " << ns << " ms" << endl;
 
+    switch (typeTrie) {
+        case TRIE:
+            cout << "Trie: nodos = " << T.node_count()
+                << " | memoria ~ " << T.memory_bytes_estimate() << " bytes\n";
+            break;
+        case RADIX_TRIE:
+            cout << "RadixTrie: nodos = " << RT.node_count()
+                << " | memoria ~ " << RT.memory_bytes_estimate() << " bytes\n";
+            break;
+    }
+
     cout << endl;
 
     string input; 

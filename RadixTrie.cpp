@@ -150,6 +150,7 @@ void RadixTrie::insert(const string& word, WordID id, int line, long long pos) {
 // Busca la palabra en el trie, y si existe retorna su id (-1 si no existe)
 WordID RadixTrie::search(const string& word) const {
     Node* node = root;
+    ++visited_nodes_;
 
     size_t i = 0;
     while (i < word.size()) {
@@ -168,6 +169,7 @@ WordID RadixTrie::search(const string& word) const {
 
         i += k;
         node = e->child;
+        ++visited_nodes_;
     }
 
     return node->wordID; // -1 si no es final de palabra
@@ -176,6 +178,7 @@ WordID RadixTrie::search(const string& word) const {
 std::vector<int> RadixTrie::explore_subtree(const std::string& prefix) const {
     std::vector<int> wordIDs;
     Node* node = root;
+    ++visited_nodes_;
     size_t i = 0;
 
     // Buscar el nodo correspondiente al último carácter del prefijo
@@ -190,6 +193,7 @@ std::vector<int> RadixTrie::explore_subtree(const std::string& prefix) const {
         }
         i += k;
         node = node->edges[ch]->child;
+        ++visited_nodes_;
     }
 
     // Recorrer el subárbol a partir del nodo encontrado
@@ -199,7 +203,7 @@ std::vector<int> RadixTrie::explore_subtree(const std::string& prefix) const {
     while (!nodes.empty()) {
         Node* currentNode = nodes.top();
         nodes.pop();
-
+        ++visited_nodes_;
         // Si el nodo es un nodo final de palabra, agregar su wordID
         if (currentNode->wordID != -1) {
             wordIDs.push_back(currentNode->wordID);
@@ -212,4 +216,41 @@ std::vector<int> RadixTrie::explore_subtree(const std::string& prefix) const {
     }
 
     return wordIDs;
+}
+
+// ---- Conteo de nodos ----
+size_t RadixTrie::count_nodes_rec(const Node* n) const {
+  if (!n) return 0;
+  size_t cnt = 1;
+  for (const auto& kv : n->edges) cnt += count_nodes_rec(kv.second->child);
+  return cnt;
+}
+
+size_t RadixTrie::node_count() const {
+  return count_nodes_rec(root);
+}
+
+// ---- Estimación de memoria ----
+// Aproximación portable (depende del impl. de std::unordered_map y std::string):
+//  - sizeof(Node) por nodo
+//  - por cada Edge: sizeof(Edge) + label.capacity() (buffer del string)
+//  - entradas del unordered_map: (clave char + puntero Edge*)
+//  - buckets del unordered_map: bucket_count * sizeof(void*)
+size_t RadixTrie::memory_bytes_rec(const Node* n) const {
+  if (!n) return 0;
+  size_t bytes = sizeof(*n);
+  // coste hash de las entradas y buckets
+  bytes += n->edges.size() * (sizeof(char) + sizeof(Edge*));
+  bytes += n->edges.bucket_count() * sizeof(void*);
+  for (const auto& kv : n->edges) {
+    Edge* e = kv.second;
+    bytes += sizeof(*e);
+    bytes += e->label.capacity(); // buffer del string (aprox.)
+    bytes += memory_bytes_rec(e->child);
+  }
+  return bytes;
+}
+
+size_t RadixTrie::memory_bytes_estimate() const {
+  return memory_bytes_rec(root) + sizeof(*this) - sizeof(root);
 }

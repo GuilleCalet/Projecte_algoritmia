@@ -45,6 +45,13 @@ private:
   static void destroy(Node* n);
   static bool hasChild(const Node* n);
 
+    // ---- MÉTRICAS INTERNAS ----
+  size_t count_nodes_rec(const Node* n) const;
+  size_t memory_bytes_rec(const Node* n) const;
+
+  // visitas por operación
+  mutable size_t visited_nodes_ = 0;
+
 public:
   RadixTrie();
   ~RadixTrie();
@@ -68,4 +75,12 @@ public:
   WordID search(const string& word) const;
 
   vector<int> explore_subtree(const string& prefix) const;
+
+  // ---- API DE MÉTRICAS ----
+  size_t node_count() const;
+  size_t memory_bytes_estimate() const;
+
+  // ---- Instrumentación de visitas por operación ----
+  void reset_visited() const { visited_nodes_ = 0; }
+  size_t last_visited() const { return visited_nodes_; }
 };

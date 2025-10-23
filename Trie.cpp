@@ -79,6 +79,7 @@ void Trie::insert(const string& word, WordID id, int line, long long pos) {
 // Busca la palabra en el trie, y si existe retorna su id (-1 si no existe)
 WordID Trie::search(const string& word) const {
   Node* node = root;
+  ++visited_nodes_;
 
   for (char ch : word) {
     int idx = ctoi(ch);
@@ -88,6 +89,7 @@ WordID Trie::search(const string& word) const {
     }
     if (node->children.find(ch) == node->children.end()) return -1; // la palabra no existe
     node = node->children.at(ch);
+    ++visited_nodes_;
   }
 
   // Comprueba si la palabra acaba en un nodo de final de palabra
@@ -97,6 +99,7 @@ WordID Trie::search(const string& word) const {
 vector<int> Trie::explore_subtree(const string& prefix) const {
     vector<int> wordIDs;
     Node* node = root;
+    ++visited_nodes_;
 
     // Buscar el nodo correspondiente al último carácter del prefijo
     for (char ch : prefix) {
@@ -104,6 +107,7 @@ vector<int> Trie::explore_subtree(const string& prefix) const {
             return {};  // No se encuentra el prefijo en el Trie
         }
         node = node->children.at(ch);
+        ++visited_nodes_;
     }
 
     // Recorrer el subárbol a partir de este nodo
@@ -113,6 +117,7 @@ vector<int> Trie::explore_subtree(const string& prefix) const {
     while (!nodes.empty()) {
         Node* currentNode = nodes.top();
         nodes.pop();
+        ++visited_nodes_;
 
         // Si el nodo es un nodo final de palabra, agregar su wordID
         if (currentNode->wordID != -1) {
@@ -126,4 +131,37 @@ vector<int> Trie::explore_subtree(const string& prefix) const {
     }
 
     return wordIDs;
+}
+
+// ---- Conteo de nodos ----
+size_t Trie::count_nodes_rec(const Node* n) const {
+  if (!n) return 0;
+  size_t cnt = 1; // este nodo
+  for (const auto& kv : n->children) cnt += count_nodes_rec(kv.second);
+  return cnt;
+}
+
+size_t Trie::node_count() const {
+  return count_nodes_rec(root);
+}
+
+// ---- Estimación de memoria ----
+// Nota: es una aproximación portable. Suma:
+//   - sizeof(Node) por nodo
+//   - por cada entrada en unordered_map: clave (char) + puntero (Node*)
+//   - overhead aproximado de buckets del map (bucket_count * sizeof(void*))
+size_t Trie::memory_bytes_rec(const Node* n) const {
+  if (!n) return 0;
+  size_t bytes = sizeof(*n); // Node
+  // coste de las entradas
+  bytes += n->children.size() * (sizeof(char) + sizeof(Node*));
+  // coste aproximado de buckets del hash
+  bytes += n->children.bucket_count() * sizeof(void*);
+  for (const auto& kv : n->children) bytes += memory_bytes_rec(kv.second);
+  return bytes;
+}
+
+size_t Trie::memory_bytes_estimate() const {
+  return memory_bytes_rec(root) + sizeof(*this) - sizeof(root); 
+  // restamos el puntero ya contado implícitamente; es orientativo
 }
