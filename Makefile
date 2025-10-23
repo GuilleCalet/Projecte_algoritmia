@@ -1,8 +1,4 @@
-
 all: clean compile
-
-execute: compile program
-	./program
 
 compile: main.o Trie.o RadixTrie.o
 	g++ -o program main.o Trie.o RadixTrie.o

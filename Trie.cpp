@@ -19,7 +19,7 @@ Trie::Trie() : root(new Node) {}
 
 // Destructor
 Trie::~Trie() {
-  if (!root) return;
+/*if (!root) return;
   stack<Node*> st;
   st.push(root);
   while (!st.empty()) {
@@ -27,32 +27,57 @@ Trie::~Trie() {
     for (Node* c : n->children) if (c) st.push(c);
     delete n;
   }
-  root = nullptr;
+  root = nullptr;*/
+}
+
+// Retorna el vector de ocurrencias (line,pos) de una palabra identificada por id
+vector<Match> Trie::occurrences(WordID id) const {
+  auto it = table_.find(id);
+  return (it == table_.end()) ? vector<Match>() : it->second;
+}
+
+// Añade una nueva ocurrencia (line,pos) de la palabra identificada por id
+void Trie::add_occur(WordID id, int line, long long pos) {
+  table_[id].push_back(Match{line,pos});
+}
+
+// Retorna el vector de en que línias aparecen las ocurrencias de la palabra identificada por id
+vector<int> Trie::get_lines(WordID id) const {
+  auto it = table_.find(id);
+  if (it == table_.end()) return {};
+
+  vector<int> out;
+  for (Match m : it->second) out.push_back(m.line);
+  return out;
+}
+
+// Retorna el vector de en que posiciones (generales) aparecen las ocurrencias de la palabra identificada por id
+vector<long long> Trie::get_positions(WordID id) const {
+  auto it = table_.find(id);
+  if (it == table_.end()) return {};
+
+  vector<long long> out;
+  for (Match m : it->second) out.push_back(m.pos);
+  return out;
 }
 
 /*** operaciones públicas ***/
-// Inserta la palabra en el Trie
-void Trie::insert(const string& word, int ID) {
+// Inserta la palabra identificada por id en el trie, y añade su ocurrencia (line,pos)
+void Trie::insert(const string& word, WordID id, int line, long long pos) {
   Node* node = root;
 
   for (char ch : word) {
-    int idx = ctoi(ch);
-    if (idx < 0 or idx >= 26) {
-      cerr << "Error: la palabra " << word << " no se ha podido insertar porque tiene carácteres no alfabéticos\n";
-      return; // ignora palabras con carácteres no alfabéticos
-    }
     // Si un nodo no contiene el hijo ch correspondiente, lo crea
     if (node->children.find(ch) == node->children.end()) node->children[ch] = new Node;
     node = node->children[ch];
   }
 
-  node->wordID = ID;  // Guardar la línea y la posición
+  node->wordID = id;  
+  add_occur(id, line, pos); // Guardar la línea y la posición
 }
 
-// Comprueba si el Trie contiene la palabra
-int Trie::search(const string& word, long long&ns) {
-  using clock = std::chrono::high_resolution_clock;
-  auto t0 = clock::now();
+// Busca la palabra en el trie, y si existe retorna su id (-1 si no existe)
+WordID Trie::search(const string& word) const {
   Node* node = root;
 
   for (char ch : word) {
@@ -66,9 +91,7 @@ int Trie::search(const string& word, long long&ns) {
   }
 
   // Comprueba si la palabra acaba en un nodo de final de palabra
-  auto t1 = clock::now();
-  ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
-  return node->wordID;  // Retornar las posiciones (líneas y posiciones dentro de las líneas)
+  return node->wordID;
 }
 
 vector<int> Trie::explore_subtree(const string& prefix) {

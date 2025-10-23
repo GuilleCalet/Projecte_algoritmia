@@ -1,11 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
-#include <algorithm> // Para find()
+
 #include "RadixTrie.hh"
 #include "Trie.hh"
-#include "Dictionary.hh"
-#include "LexicographicSearch.hh"
+#include "TextSearch.hh"
 
 using namespace std;
 
@@ -21,112 +20,8 @@ int dictionary;
 Trie T;
 RadixTrie RT;
 
-Dictionary Postings;
-
 WordID wordID = 0;
 
-template <typename TType>
-void search_word(const Trie& trie, const string& word) {
-    if (word.empty()) {
-        cout << "Consulta vacía.\n";
-        return;
-    }
-
-    WordID id = trie.search(word);
-    if (id == -1) {
-        cout << "No se ha encontrado la palabra '" << word << "' en el texto.\n";
-        return;
-    }
-
-    const auto& occList = Postings.occurrences(id);
-    cout << "Se ha encontrado la palabra '" << word << "' en " << occList.size() << " línea(s): [";
-    for (int i = 0; i < occList.size(); i++) {
-        if (i != 0) cout << ", ";
-        cout << occList[i].line;
-    }
-    cout << "]\n";
-}
-
-bool contains_occ(const vector<Match>& vec, int line, long long pos) {
-    return binary_search(vec.begin(), vec.end(), Match{line,pos}, MatchLess{});
-}
-
-template <typename TType>
-void search_phrase(const TType& trie, const string& phrase) {
-    vector<WordID> words;
-    
-    int i = 0, n = phrase.size();
-    while (i < n) {
-        while (i < n and phrase[i] == ' ') i++;
-        int j = i;
-        while (j < n and phrase[j] != ' ') j++;
-        if (j > i) words.push_back(trie.search(phrase.substr(i, j-i)));
-        i = j;
-    }
-
-    if (words.empty()) {
-        cout << "Consulta vacía.\n";
-        return;
-    }
-
-    int k = words.sizze(); // k = nº palabras
-
-    vector<const vector<Match>*> occs(k, nullptr);
-    for (int i = 0; i < k; i++) {
-        if (words[i] == -1) {
-            cout << "No se ha encontrado la frase '" << phrase << "' en el texto.\n";
-            return;
-        }
-
-        const auto& vec = Postings.occurrences(words[i]);
-        occs[i] = &vec;
-    }
-
-    // min = palabra con menos ocurrencias en el texto
-    int min = 0;
-    for (int i = 1; i < k; i++) {
-        if (occs[i]->size() < occs[min]->size()) min = i;
-    }
-
-    vector<int> rel(k);
-    for (int i = 0; i < k; i++) rel[i] = i - min;
-
-    vector<int> result_lines;
-
-    const auto& minOcc = *occs[min];
-    for (const auto& match : minOcc) {
-        const int line = match.line;
-        const long long p0 = match.pos;
-
-        bool ok = true;
-        for (int i = 0; i < k and ok; i++) {
-            if (i == min) continue;
-            const long long need = p0 + rel[i];
-            of = contains_occ(*occs[i], line, need);
-        }
-        if (ok) {
-            result_lines.push_back(line);
-        }
-    }
-
-    if (result_lines.empty()) {
-        cout << "No se ha encontrado la frase '" << phrase << "' en el texto.\n";
-        return;
-    }
-
-    cout << "Se ha encontrado la frase '" << phrase << "' en " << result_lines.size() << " línea(s): [";
-    for (int i = 0; i < result_lines.size(); i++) {
-        if (i != 0) cout << ", ";
-        cout << occList[i].line;
-    }
-    cout << "]\n";
-}
-
-template <typename TType>
-void search_prefix(const TType& trie, const string& word) {}
-
-template <typename TType>
-void autocomplete(const TType& trie, const string& word) {}
 
 // Indexa e inserta una palabra ya normalizada en las estructuras de búsqueda:
 //  - indexar la palabra (asociar a wordID)
@@ -141,25 +36,23 @@ void index_and_insert(const string& word, int line, long long& pos) {
         id = T.search(word); // buscamos si la palabra ya existe
         // Si es la primera ocurrencia de la palabra generamos su wordID y la insertamos
         if (id == -1) {
-            T.insert(word, wordID);
-            Postings.add(wordID, line, pos);
+            T.insert(word, wordID, line, pos);
             wordID++;
         } 
         // Si la palabra ya existía, solo necesitamos añadir la tupla (line,pos) como ocurrencia
         else {
-            Postings.add(id, line, pos);
+            T.add_occur(id, line, pos);
         }
         break;
      // Mismo procedimiento pero para RadixTrie
      case RADIX_TRIE:
         id = RT.search(word);
         if (id == -1) { 
-            RT.insert(word, wordID);
-            Postings.add(wordID, line, pos);
+            RT.insert(word, wordID, line, pos);
             wordID++;
         }
         else { 
-            Postings.add(id, line, pos);
+            RT.add_occur(id, line, pos);
         }
     }
     pos++; // siguiente posición global
