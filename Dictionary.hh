@@ -5,23 +5,24 @@
 
 using namespace std;
 
-typedef int WordID;
-
-class Dictionary {
-public:
-
   struct Match {
     int line;
     long long pos;
 
+    bool operator<(const Match& other) const {
+      return ((line < other.line) or (line == other.line and pos < other.pos));
+    }
+    bool operator==(const Match& other) const {
+      return (line == other.line and pos == other.pos);
+    }
   };
 
 private:
   unordered_map<WordID,vector<Match>> table_;
   
 public:
-  Dictionary();
-  ~Dictionary();
+  Dictionary() = default;
+  ~Dictionary() = default;
 
   void add(WordID id, int line, long long pos) {
     table_[id].push_back(Match{line,pos});
@@ -35,5 +36,4 @@ public:
     auto it = table_.find(id);
     return (it == table_.end()) ? vector<Match>() : it->second;
   }
-
 };
