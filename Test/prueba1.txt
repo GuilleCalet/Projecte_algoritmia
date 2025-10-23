@@ -1,6 +1,7 @@
 antiestetico
 antipatico
 antirrobo 
+anti
 marcador
 marcapasos 
 marcado

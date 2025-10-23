@@ -94,7 +94,7 @@ WordID Trie::search(const string& word) const {
   return node->wordID;
 }
 
-vector<int> Trie::explore_subtree(const string& prefix) {
+vector<int> Trie::explore_subtree(const string& prefix) const {
     vector<int> wordIDs;
     Node* node = root;
 

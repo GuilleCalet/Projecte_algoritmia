@@ -145,8 +145,8 @@ int main(int argc, char* argv[]) {
 
     // Decidir que diccionario se usará (ASCII/UTF8)
     cout << "¿Que diccionario quieres usar?\n"
-            " Para usar ASCII pulse (1):\n"
-            " Para usar UTF-8 pulse (2):\n";
+            "- Para usar ASCII pulse (1):\n"
+            "- Para usar UTF-8 pulse (2):\n";
     cout << "¿Cuál quieres usar?: ";
     cin >> dictionary;
 
@@ -154,10 +154,12 @@ int main(int argc, char* argv[]) {
 
     // Decidir que tipo de trie se usará
     cout << "¿Que tipo de trie quieres usar?\n"
-            " Para usar Basic Trie pulse (1)\n"
-            " Para usar Radix Trie pulse (2)\n";
+            "- Para usar Basic Trie pulse (1)\n"
+            "- Para usar Radix Trie pulse (2)\n";
     cout << "¿Cuál quieres usar?: ";
     cin >> typeTrie;
+
+    cout << endl;
 
     // Leer el archivo de entrada y generar estructuras de búsqueda
     auto t0 = std::chrono::high_resolution_clock::now();
@@ -166,20 +168,37 @@ int main(int argc, char* argv[]) {
     auto ns = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
     cout << "Generar el árbol ha tardado " << ns << " ms" << endl;
 
+    cout << endl;
+
     string input; 
     cin.ignore();  // Limpiar el buffer de entrada
-    cout << "¿Qué palabra, prefijo o frase quieres consultar? (minúsculas)\n -> "; 
-    while (getline(cin, input)) {
-        if (input.find(' ') != string::npos) { // Si la consulta contiene espacios, es una frase
+    cout << "¿Qué palabra, prefijo o frase quieres consultar? (minúsculas)\n"
+            "- Para consultar una palabra escribe primero el commando word>\n"
+            "- Para consultar un prefijo escribe primero el commando prefix>\n"
+            "- Para consultar una frase escribe primero el commando phrase>\n"
+            "-> "; 
+    string consult;
+    while (cin >> consult) {
+        
+        if (consult == "phrase>") { // Si la consulta contiene espacios, es una frase
+            getline(cin, input);
             switch (typeTrie) {
              case TRIE: search_phrase(T, input); break;
              case RADIX_TRIE: search_phrase(RT, input); break;
             }
         }
-        else { // Si no contiene espacios, es una palabra o prefijo
+        else if (consult == "word>") { // Si no contiene espacios, es una palabra o prefijo
+            cin >> input;
             switch (typeTrie) {
              case TRIE: search_word(T, input); break;
              case RADIX_TRIE: search_word(RT, input); break;
+            }
+        }
+        else if (consult == "prefix>") {
+            cin >> input;
+            switch (typeTrie) {
+             case TRIE: search_prefix(T, input); break;
+             case RADIX_TRIE: search_prefix(RT, input); break;
             }
         }
         cout << "-> ";

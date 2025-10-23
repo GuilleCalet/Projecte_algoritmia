@@ -173,48 +173,7 @@ WordID RadixTrie::search(const string& word) const {
     return node->wordID; // -1 si no es final de palabra
 }
 
-std::vector<int> RadixTrie::explore_subtree(const std::string& prefix) {
-    std::vector<int> wordIDs;
-    Node* node = root;
-    size_t i = 0;
-
-    // Buscar el nodo correspondiente al último carácter del prefijo
-    while (i < prefix.size()) {
-        char ch = prefix[i];
-        if (node->edges.find(ch) == node->edges.end()) {
-            return {};  // El prefijo no se encuentra en el RadixTrie
-        }
-        size_t k = std::min(prefix.size() - i, node->edges[ch]->label.size());
-        if (prefix.substr(i, k) != node->edges[ch]->label) {
-            return {};  // El prefijo no coincide
-        }
-        i += k;
-        node = node->edges[ch]->child;
-    }
-
-    // Recorrer el subárbol a partir del nodo encontrado
-    std::stack<Node*> nodes;
-    nodes.push(node);
-
-    while (!nodes.empty()) {
-        Node* currentNode = nodes.top();
-        nodes.pop();
-
-        // Si el nodo es un nodo final de palabra, agregar su wordID
-        if (currentNode->wordID != -1) {
-            wordIDs.push_back(currentNode->wordID);
-        }
-
-        // Añadir todos los hijos del nodo actual a la pila
-        for (auto& edge : currentNode->edges) {
-            nodes.push(edge.second->child);
-        }
-    }
-
-    return wordIDs;
-}
-
-std::vector<int> RadixTrie::explore_subtree(const std::string& prefix) {
+std::vector<int> RadixTrie::explore_subtree(const std::string& prefix) const {
     std::vector<int> wordIDs;
     Node* node = root;
     size_t i = 0;

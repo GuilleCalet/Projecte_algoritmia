@@ -100,7 +100,21 @@ void search_phrase(const TType& trie, const string& phrase) {
 }
 
 template <typename TType>
-void search_prefix(const TType& trie, const string& word) {}
+void search_prefix(const TType& trie, const string& prefix) { 
+    vector<WordID> wordIDs = trie.explore_subtree(prefix);
+
+    int numLines = 0;
+    cout << "Se ha encontrado el prefijo '" << prefix << "' en las línea(s): [";
+    for (int id = 0; id < wordIDs.size(); id++) {
+        vector<int> result_lines = trie.get_lines(wordIDs[id]);
+        numLines += result_lines.size();
+        for (int i = 0; i < result_lines.size(); i++) {
+            if (id != 0 or i != 0) cout << ", ";
+            cout << result_lines[i];
+        }
+    }
+    cout << "] nº líneas " << numLines<< "\n";
+}
 
 template <typename TType>
 void autocomplete(const TType& trie, const string& word) {}

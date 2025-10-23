@@ -67,5 +67,5 @@ public:
   // Busca la palabra en el trie, y si existe retorna su id (-1 si no existe)
   WordID search(const string& word) const;
 
-  vector<int> explore_subtree(const string& prefix);
+  vector<int> explore_subtree(const string& prefix) const;
 };
