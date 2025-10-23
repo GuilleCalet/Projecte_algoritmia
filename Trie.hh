@@ -3,7 +3,7 @@
 #include <vector>
 #include <array>
 #include <unordered_map>
-
+#include <queue>
 #include "Match.hh"
 
 using namespace std;
@@ -77,6 +77,8 @@ public:
     auto it = lexicon_.find(id);
     return (it == lexicon_.end()) ? string() : it->second;
   }
+
+  std::vector<WordID> complete_prefix_topk(const std::string& prefix, size_t k) const;
 
   // ---- API DE MÉTRICAS ----
   size_t node_count() const;              // nº total de nodos

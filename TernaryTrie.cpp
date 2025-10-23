@@ -116,3 +116,44 @@ vector<int> TernaryTrie::explore_subtree(const string& prefix) const {
   }
   return wordIDs;
 }
+
+std::vector<WordID> TernaryTrie::complete_prefix_topk(const std::string& prefix, size_t k) const {
+    std::vector<WordID> out;
+    visited_nodes_ = 0;
+
+    // 1) Descenso al último carácter del prefijo
+    const Node* n = root;
+    size_t i = 0;
+    while (n && i < prefix.size()) {
+        ++visited_nodes_;
+        if (prefix[i] < n->c)      n = n->lo;
+        else if (prefix[i] > n->c) n = n->hi;
+        else {
+            if (i + 1 == prefix.size()) break;  // 'n' es el nodo del último char del prefijo
+            n = n->eq; ++i;
+        }
+    }
+    if (!n || i + 1 != prefix.size()) return out;
+
+    // 2) BFS por capas: capa 1 comienza en n->eq
+    struct Item { const Node* node; int depth; };
+    std::queue<Item> q;
+    if (n->eq) q.push({n->eq, 1});
+
+    while (!q.empty() && out.size() < k) {
+        Item cur = q.front(); q.pop();
+        ++visited_nodes_;
+
+        if (cur.node->wordID != -1) {
+            out.push_back(cur.node->wordID);
+            if (out.size() >= k) break;
+        }
+        // Misma profundidad: lo / hi
+        if (cur.node->lo) q.push({cur.node->lo, cur.depth});
+        if (cur.node->hi) q.push({cur.node->hi, cur.depth});
+        // Profundidad siguiente: eq
+        if (cur.node->eq) q.push({cur.node->eq, cur.depth + 1});
+    }
+
+    return out;
+}

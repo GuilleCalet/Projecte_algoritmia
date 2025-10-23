@@ -257,3 +257,82 @@ size_t RadixTrie::memory_bytes_rec(const Node* n) const {
 size_t RadixTrie::memory_bytes_estimate() const {
   return memory_bytes_rec(root) + sizeof(*this) - sizeof(root);
 }
+
+std::vector<WordID> RadixTrie::complete_prefix_topk(const std::string& prefix, size_t k) const {
+    std::vector<WordID> out;
+    visited_nodes_ = 0;
+
+    const Node* node = root;
+    ++visited_nodes_;
+
+    // 1) Bajar siguiendo el prefijo (permitiendo acabar a mitad de etiqueta)
+    size_t i = 0;
+    size_t carry = 0; // chars pendientes si el prefijo acaba a mitad de label
+    while (i < prefix.size()) {
+        char ch = prefix[i];
+        auto it = node->edges.find(ch);
+        if (it == node->edges.end()) return out;
+
+        const Edge* e = it->second;
+        const std::string& lab = e->label;
+
+        const size_t m = std::min(lab.size(), prefix.size() - i);
+        size_t kcmp = 0;
+        while (kcmp < m && prefix[i + kcmp] == lab[kcmp]) ++kcmp;
+        if (kcmp < m) return out;  // el prefijo no coincide
+
+        i += kcmp;
+        if (kcmp < lab.size()) {
+            // Prefijo termina dentro de esta etiqueta
+            carry = lab.size() - kcmp;     // falta por “consumir” para llegar al hijo
+            node  = e->child;
+            ++visited_nodes_;
+            break;
+        }
+        node = e->child;
+        ++visited_nodes_;
+    }
+
+    // 2) Min-heap por profundidad (chars desde el prefijo)
+    //    Item: (depth, rem, node). Mientras rem>0, “consumimos” 1 char y
+    //    reencolamos el MISMO nodo con depth+1 y rem-1. Cuando rem==0,
+    //    podemos considerar wordID y expandir hijos.
+    struct Item {
+        size_t depth;      // caracteres añadidos desde el prefijo
+        size_t rem;        // chars pendientes para “llegar” al nodo actual
+        const Node* n;
+        bool operator>(const Item& o) const {
+            if (depth != o.depth) return depth > o.depth;
+            return rem > o.rem; // desempate estable
+        }
+    };
+
+    std::priority_queue<Item, std::vector<Item>, std::greater<Item>> pq;
+    pq.push({0, carry, node});
+
+    while (!pq.empty() && out.size() < k) {
+        Item it = pq.top(); pq.pop();
+        ++visited_nodes_;
+
+        if (it.rem > 0) {
+            // Aún estamos “dentro” de una etiqueta: consumimos 1 char y seguimos en este nodo
+            pq.push({it.depth + 1, it.rem - 1, it.n});
+            continue;
+        }
+
+        // Ya “hemos llegado” al nodo
+        if (it.depth >= 1 && it.n->wordID != -1) {
+            out.push_back(it.n->wordID);
+            if (out.size() >= k) break;
+        }
+
+        // Expandir hijos: cada arista añade e->label.size() caracteres
+        for (const auto& kv : it.n->edges) {
+            const Edge* e = kv.second;
+            const size_t L = e->label.size();
+            pq.push({it.depth + L, L, e->child});
+        }
+    }
+
+    return out;
+}

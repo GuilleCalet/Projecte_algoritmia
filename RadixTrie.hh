@@ -5,7 +5,8 @@
 #include <vector>
 #include <array>
 #include <unordered_map>
-
+#include <queue>
+#include <functional>
 #include "Match.hh"
 
 using namespace std;
@@ -78,6 +79,9 @@ public:
   WordID search(const string& word) const;
 
   vector<int> explore_subtree(const string& prefix) const;
+
+  std::vector<WordID> complete_prefix_topk(const std::string& prefix, size_t k) const;
+
 
   // ---- API DE MÉTRICAS ----
   size_t node_count() const;

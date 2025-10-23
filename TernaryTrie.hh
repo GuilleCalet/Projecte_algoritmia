@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <stack>
-
+#include <queue>
 #include "Match.hh"
 
 using namespace std;
@@ -87,6 +87,8 @@ public:
   void insert(const string& word, WordID id, int line, long long pos);
   WordID search(const string& word) const;
   vector<int> explore_subtree(const string& prefix) const;
+
+  std::vector<WordID> complete_prefix_topk(const std::string& prefix, size_t k) const;
 
   // ---- API de métricas (mismo interfaz que Trie) ----
   size_t node_count() const { return count_nodes_rec(root); }
