@@ -8,12 +8,6 @@
 
 using namespace std;
 
-// Convierte un carácter en un índice normalizado (normaliza a minúsculas)
-int Trie::ctoi(char ch) {
-  unsigned char uch = static_cast<unsigned char>(ch);
-  return tolower(uch) - 'a';
-}
-
 // Constructor
 Trie::Trie() : root(new Node) {}
 
@@ -68,7 +62,7 @@ void Trie::insert(const string& word, WordID id, int line, long long pos) {
 
   for (char ch : word) {
     // Si un nodo no contiene el hijo ch correspondiente, lo crea
-    if (node->children.find(ch) == node->children.end()) node->children[ch] = new Node;
+    if (node->children.find(tolower(ch)) == node->children.end()) node->children[ch] = new Node;
     node = node->children[ch];
   }
 
@@ -82,12 +76,7 @@ WordID Trie::search(const string& word) const {
   ++visited_nodes_;
 
   for (char ch : word) {
-    int idx = ctoi(ch);
-    if (idx < 0 or idx >= 26) {
-      cerr << "Error: la palabra buscada " << word << " tiene carácteres no compatibles\n";
-      return -1; // ignora palabras con carácteres no alfabéticos
-    }
-    if (node->children.find(ch) == node->children.end()) return -1; // la palabra no existe
+    if (node->children.find(tolower(ch)) == node->children.end()) return -1; // la palabra no existe
     node = node->children.at(ch);
     ++visited_nodes_;
   }

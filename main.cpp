@@ -183,14 +183,18 @@ int main(int argc, char* argv[]) {
     cout << "Generar el árbol ha tardado " << ns << " ms" << endl;
 
     switch (typeTrie) {
-        case TRIE:
-            cout << "Trie: nodos = " << T.node_count()
-                << " | memoria ~ " << T.memory_bytes_estimate() << " bytes\n";
-            break;
-        case RADIX_TRIE:
-            cout << "RadixTrie: nodos = " << RT.node_count()
-                << " | memoria ~ " << RT.memory_bytes_estimate() << " bytes\n";
-            break;
+     case TRIE:
+        cout << "Trie: nodos = " << T.node_count()
+            << " | memoria ~ " << T.memory_bytes_estimate() << " bytes\n";
+        break;
+     case RADIX_TRIE:
+        cout << "RadixTrie: nodos = " << RT.node_count()
+            << " | memoria ~ " << RT.memory_bytes_estimate() << " bytes\n";
+        break;
+     case TERNARY_TRIE:
+        cout << "TernaryTrie: nodos = " << TST.node_count()
+            << " | memoria ~ " << TST.memory_bytes_estimate() << " bytes\n";
+        break;
     }
 
     cout << endl;

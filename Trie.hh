@@ -23,12 +23,6 @@ private:
 
   unordered_map<WordID, vector<Match>> table_; // tabla de tuplas (line,pos) para cada ocurrencia de cada palabra del texto
 
-  /** @brief Converteix un caràcter a l'index corresponent normalitzat
-  \pre El caràcter ch és una lletra da l'alfabet
-  \post Retorna el caràcter ch en la seva forma minúscula
-  */
-  static int ctoi(char ch);
-
   // ---- MÉTRICAS INTERNAS ----
   size_t count_nodes_rec(const Node* n) const;
   size_t memory_bytes_rec(const Node* n) const;

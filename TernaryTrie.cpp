@@ -43,6 +43,7 @@ WordID TernaryTrie::search(const string& word) const {
   size_t i = 0;
   const Node* p = root;
 
+  ++visited_nodes_;                // visitamos root
   while (p) {
     if (s[i] < p->c) {
       p = p->lo;
@@ -51,26 +52,26 @@ WordID TernaryTrie::search(const string& word) const {
     } else {
       // s[i] == p->c
       if (i + 1 == word.size()) {
-        return p->wordID; // -1 si no era final de palabra
+        return p->wordID;         // -1 si no termina aquí
       }
       p = p->eq;
       ++i;
     }
+    if (p) ++visited_nodes_;       // contamos el siguiente nodo al que pasamos
   }
   return -1;
 }
 
-// Recorre el subárbol a partir del nodo que corresponde al prefijo
 vector<int> TernaryTrie::explore_subtree(const string& prefix) const {
   vector<int> wordIDs;
   if (!root) return wordIDs;
+
   if (prefix.empty()) {
-    // Prefijo vacío: devolver todas las palabras del trie
-    // DFS desde root, acumulando wordID de cada nodo terminal
     std::stack<const Node*> st;
     st.push(root);
     while (!st.empty()) {
       auto n = st.top(); st.pop();
+      ++visited_nodes_;            // cada nodo extraído se considera visitado
       if (!n) continue;
       if (n->wordID != -1) wordIDs.push_back(n->wordID);
       st.push(n->lo);
@@ -80,34 +81,34 @@ vector<int> TernaryTrie::explore_subtree(const string& prefix) const {
     return wordIDs;
   }
 
-  // 1) Descender hasta el nodo del último carácter del prefijo
+  // bajar hasta el nodo del último carácter del prefijo
   const Node* p = root;
   size_t i = 0;
+  ++visited_nodes_;                // visit root
   while (p) {
     if (prefix[i] < p->c) {
       p = p->lo;
     } else if (prefix[i] > p->c) {
       p = p->hi;
     } else {
-      // letra coincide
-      if (i + 1 == prefix.size()) break; // 'p' es el nodo del último char del prefijo
+      if (i + 1 == prefix.size()) break;
       p = p->eq;
       ++i;
     }
+    if (p) ++visited_nodes_;       // contamos cada avance
   }
-  if (!p) return wordIDs; // prefijo no presente
+  if (!p) return wordIDs;          // prefijo no presente
 
-  // 2) Si el prefijo en sí es palabra, incluir su wordID
   if (p->wordID != -1) wordIDs.push_back(p->wordID);
 
-  // 3) Recorrer todo el subárbol bajo el hijo 'eq' (continuaciones del prefijo)
+  // explorar continuaciones bajo 'eq'
   std::stack<const Node*> st;
   st.push(p->eq);
   while (!st.empty()) {
     auto n = st.top(); st.pop();
+    ++visited_nodes_;
     if (!n) continue;
     if (n->wordID != -1) wordIDs.push_back(n->wordID);
-    // DFS ternario
     st.push(n->lo);
     st.push(n->eq);
     st.push(n->hi);
