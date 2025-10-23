@@ -23,7 +23,7 @@ private:
   Node* root = nullptr;
 
   unordered_map<WordID, vector<Match>> table_;
-
+  unordered_map<WordID, string> lexicon_;
   static Node* make(char ch) { Node* n = new Node; n->c = ch; return n; }
   static void destroy(Node* n) {
     if (!n) return;
@@ -96,4 +96,9 @@ public:
   }
   void reset_visited() const { visited_nodes_ = 0; }
   size_t last_visited() const { return visited_nodes_; }
+
+  string word_of(WordID id) const {
+    auto it = lexicon_.find(id);
+    return (it == lexicon_.end()) ? string() : it->second;
+  }
 };

@@ -67,6 +67,9 @@ void Trie::insert(const string& word, WordID id, int line, long long pos) {
   }
 
   node->wordID = id;  
+
+  lexicon_[id] = word;
+  
   add_occur(id, line, pos); // Guardar la línea y la posición
 }
 

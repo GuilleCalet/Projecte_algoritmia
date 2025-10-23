@@ -32,6 +32,9 @@ private:
 
   unordered_map<WordID, vector<Match>> table_; // tabla de tuplas (line,pos) para cada ocurrencia de cada palabra del texto
   
+  // *** NUEVO ***
+  unordered_map<WordID, string> lexicon_;
+
   static inline int ctoi(char ch) {
     unsigned char uch = static_cast<unsigned char>(ch);
     return tolower(uch) - 'a';
@@ -79,6 +82,11 @@ public:
   // ---- API DE MÉTRICAS ----
   size_t node_count() const;
   size_t memory_bytes_estimate() const;
+
+  string word_of(WordID id) const {
+    auto it = lexicon_.find(id);
+    return (it == lexicon_.end()) ? string() : it->second;
+  }
 
   // ---- Instrumentación de visitas por operación ----
   void reset_visited() const { visited_nodes_ = 0; }

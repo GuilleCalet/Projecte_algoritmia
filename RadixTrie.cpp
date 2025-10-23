@@ -87,6 +87,7 @@ void RadixTrie::insert(const string& word, WordID id, int line, long long pos) {
         if (it == node->edges.end()) {
             node->edges[ch] = new Edge{word.substr(i), new Node};
             node->edges[ch]->child->wordID = id;
+            lexicon_[id] = word;
             add_occur(id, line, pos);
             return;
         }
@@ -129,6 +130,7 @@ void RadixTrie::insert(const string& word, WordID id, int line, long long pos) {
         if (rem.empty()) {
             // La palabra termina exactamente en 'mid'
             mid->wordID = id;
+            lexicon_[id] = word;
             add_occur(id, line, pos);
             return;
         } else {
@@ -136,6 +138,7 @@ void RadixTrie::insert(const string& word, WordID id, int line, long long pos) {
             Edge* newEdge = new Edge{ rem, new Node };
             newEdge->child->wordID = id;
             mid->edges[rem[0]] = newEdge;
+            lexicon_[id] = word;
             add_occur(id, line, pos);
             return;
         }

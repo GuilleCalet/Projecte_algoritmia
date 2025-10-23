@@ -24,6 +24,7 @@ void TernaryTrie::insert(const string& word, WordID id, int line, long long pos)
       // s[i] == p->c
       if (i + 1 == word.size()) {
         // último carácter de la palabra
+        lexicon_[id] = word;
         p->wordID = id;
         add_occur(id, line, pos);
         return;

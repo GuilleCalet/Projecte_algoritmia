@@ -22,7 +22,10 @@ private:
   Node* root = nullptr; // raíz del Trie
 
   unordered_map<WordID, vector<Match>> table_; // tabla de tuplas (line,pos) para cada ocurrencia de cada palabra del texto
-
+  
+   // *** NUEVO: diccionario id -> palabra ***
+  unordered_map<WordID, string> lexicon_;
+  
   // ---- MÉTRICAS INTERNAS ----
   size_t count_nodes_rec(const Node* n) const;
   size_t memory_bytes_rec(const Node* n) const;
@@ -69,6 +72,11 @@ public:
   WordID search(const string& word) const;
 
   vector<int> explore_subtree(const string& prefix) const;
+
+  string word_of(WordID id) const {
+    auto it = lexicon_.find(id);
+    return (it == lexicon_.end()) ? string() : it->second;
+  }
 
   // ---- API DE MÉTRICAS ----
   size_t node_count() const;              // nº total de nodos
