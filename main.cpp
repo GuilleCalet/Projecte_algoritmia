@@ -2,14 +2,16 @@
 #include <fstream>
 #include <chrono>
 
-#include "RadixTrie.hh"
 #include "Trie.hh"
+#include "RadixTrie.hh"
+#include "TernaryTrie.hh"
 #include "TextSearch.hh"
 
 using namespace std;
 
 #define TRIE 1
 #define RADIX_TRIE 2
+#define TERNARY_TRIE 3
 int typeTrie;
 
 #define ASCII 1
@@ -19,6 +21,7 @@ int dictionary;
 
 Trie T;
 RadixTrie RT;
+TernaryTrie TST;
 
 WordID wordID = 0;
 
@@ -53,6 +56,16 @@ void index_and_insert(const string& word, int line, long long& pos) {
         }
         else { 
             RT.add_occur(id, line, pos);
+        }
+     // Mismo procedimiento pero para TernaryTrie
+     case TERNARY_TRIE:
+        id = TST.search(word);
+        if (id == -1) { 
+            TST.insert(word, wordID, line, pos);
+            wordID++;
+        }
+        else { 
+            TST.add_occur(id, line, pos);
         }
     }
     pos++; // siguiente posición global
@@ -155,7 +168,8 @@ int main(int argc, char* argv[]) {
     // Decidir que tipo de trie se usará
     cout << "¿Que tipo de trie quieres usar?\n"
             "- Para usar Basic Trie pulse (1)\n"
-            "- Para usar Radix Trie pulse (2)\n";
+            "- Para usar Radix Trie pulse (2)\n"
+            "- Para usar Ternary Search Trie pulse (3)\n";
     cout << "¿Cuál quieres usar?: ";
     cin >> typeTrie;
 
@@ -186,33 +200,38 @@ int main(int argc, char* argv[]) {
     cout << "¿Qué palabra, prefijo o frase quieres consultar? (minúsculas)\n"
             "- Para consultar una palabra escribe primero el commando word>\n"
             "- Para consultar un prefijo escribe primero el commando prefix>\n"
-            "- Para consultar una frase escribe primero el commando phrase>\n"
-            "-> "; 
-    string consult;
-    while (cin >> consult) {
+            "- Para consultar una frase escribe primero el commando phrase>\n\n"; 
+    string command;
+    while (cin >> command) {
         
-        if (consult == "phrase>") { // Si la consulta contiene espacios, es una frase
+        if (command == "phrase>") { // Si la consulta contiene espacios, es una frase
             getline(cin, input);
             switch (typeTrie) {
              case TRIE: search_phrase(T, input); break;
              case RADIX_TRIE: search_phrase(RT, input); break;
+             case TERNARY_TRIE: search_phrase(TST, input); break;
             }
         }
-        else if (consult == "word>") { // Si no contiene espacios, es una palabra o prefijo
+        else if (command == "word>") { // Si no contiene espacios, es una palabra o prefijo
             cin >> input;
             switch (typeTrie) {
              case TRIE: search_word(T, input); break;
              case RADIX_TRIE: search_word(RT, input); break;
+             case TERNARY_TRIE: search_word(TST, input); break;
             }
         }
-        else if (consult == "prefix>") {
+        else if (command == "prefix>") {
             cin >> input;
             switch (typeTrie) {
              case TRIE: search_prefix(T, input); break;
              case RADIX_TRIE: search_prefix(RT, input); break;
+             case TERNARY_TRIE: search_prefix(TST, input); break;
             }
         }
-        cout << "-> ";
+        else {
+            cout << "Error: el comando '" << command << "' no existe\n";
+        }
+        cout << endl;
     }
     
     return 0;
