@@ -1,34 +1,9 @@
-// Trie.cpp
 #include "Trie.hh"
-#include <cctype>
-#include <algorithm>
-#include <stack>
-#include<chrono>
-#include <utility>
 
-using namespace std;
 
 // Constructor
 Trie::Trie() : root(new Node) {}
 
-// Destructor
-Trie::~Trie() {
-/*if (!root) return;
-  stack<Node*> st;
-  st.push(root);
-  while (!st.empty()) {
-    Node* n = st.top(); st.pop();
-    for (Node* c : n->children) if (c) st.push(c);
-    delete n;
-  }
-  root = nullptr;*/
-}
-
-// Retorna el vector de ocurrencias (line,pos) de una palabra identificada por id
-vector<Match> Trie::occurrences(WordID id) const {
-  auto it = table_.find(id);
-  return (it == table_.end()) ? vector<Match>() : it->second;
-}
 
 // Añade una nueva ocurrencia (line,pos) de la palabra identificada por id
 void Trie::add_occur(WordID id, int line, long long pos) {
@@ -55,7 +30,6 @@ vector<long long> Trie::get_positions(WordID id) const {
   return out;
 }
 
-/*** operaciones públicas ***/
 // Inserta la palabra identificada por id en el trie, y añade su ocurrencia (line,pos)
 void Trie::insert(const string& word, WordID id, int line, long long pos) {
   Node* node = root;
@@ -67,9 +41,7 @@ void Trie::insert(const string& word, WordID id, int line, long long pos) {
   }
 
   node->wordID = id;  
-
   lexicon_[id] = word;
-  
   add_occur(id, line, pos); // Guardar la línea y la posición
 }
 
@@ -84,7 +56,6 @@ WordID Trie::search(const string& word) const {
     ++visited_nodes_;
   }
 
-  // Comprueba si la palabra acaba en un nodo de final de palabra
   return node->wordID;
 }
 
@@ -95,11 +66,9 @@ vector<int> Trie::explore_subtree(const string& prefix) const {
 
     // Buscar el nodo correspondiente al último carácter del prefijo
     for (char ch : prefix) {
-        if (node->children.find(ch) == node->children.end()) {
-            return {};  // No se encuentra el prefijo en el Trie
-        }
-        node = node->children.at(ch);
-        ++visited_nodes_;
+      if (node->children.find(ch) == node->children.end()) return {};  // No se encuentra el prefijo en el Trie
+      node = node->children.at(ch);
+      ++visited_nodes_;
     }
 
     // Recorrer el subárbol a partir de este nodo
@@ -107,25 +76,18 @@ vector<int> Trie::explore_subtree(const string& prefix) const {
     nodes.push(node);
 
     while (!nodes.empty()) {
-        Node* currentNode = nodes.top();
-        nodes.pop();
-        ++visited_nodes_;
-
-        // Si el nodo es un nodo final de palabra, agregar su wordID
-        if (currentNode->wordID != -1) {
-            wordIDs.push_back(currentNode->wordID);
-        }
-
-        // Añadir todos los hijos del nodo actual a la pila
-        for (auto& child : currentNode->children) {
-            nodes.push(child.second);
-        }
+      Node* currentNode = nodes.top();
+      nodes.pop();
+      ++visited_nodes_;
+      // Si el nodo es un nodo final de palabra, agregar su wordID
+      if (currentNode->wordID != -1) wordIDs.push_back(currentNode->wordID);
+      // Añadir todos los hijos del nodo actual a la pila
+      for (auto& child : currentNode->children) nodes.push(child.second);
     }
-
     return wordIDs;
 }
 
-// ---- Conteo de nodos ----
+
 size_t Trie::count_nodes_rec(const Node* n) const {
   if (!n) return 0;
   size_t cnt = 1; // este nodo
@@ -137,11 +99,7 @@ size_t Trie::node_count() const {
   return count_nodes_rec(root);
 }
 
-// ---- Estimación de memoria ----
-// Nota: es una aproximación portable. Suma:
-//   - sizeof(Node) por nodo
-//   - por cada entrada en unordered_map: clave (char) + puntero (Node*)
-//   - overhead aproximado de buckets del map (bucket_count * sizeof(void*))
+
 size_t Trie::memory_bytes_rec(const Node* n) const {
   if (!n) return 0;
   size_t bytes = sizeof(*n); // Node
@@ -155,11 +113,10 @@ size_t Trie::memory_bytes_rec(const Node* n) const {
 
 size_t Trie::memory_bytes_estimate() const {
   return memory_bytes_rec(root) + sizeof(*this) - sizeof(root); 
-  // restamos el puntero ya contado implícitamente; es orientativo
 }
 
-std::vector<WordID> Trie::complete_prefix_topk(const std::string& prefix, size_t k) const {
-    std::vector<WordID> out;
+vector<WordID> Trie::complete_prefix_topk(const string& prefix, size_t k) const {
+    vector<WordID> out;
     visited_nodes_ = 0;
 
     // 1) bajar al nodo del prefijo
@@ -174,7 +131,7 @@ std::vector<WordID> Trie::complete_prefix_topk(const std::string& prefix, size_t
 
     // 2) BFS por capas: iniciar con los hijos a profundidad = 1
     struct Item { const Node* n; int depth; };
-    std::queue<Item> q;
+    queue<Item> q;
     for (const auto& kv : node->children) q.push({kv.second, 1});
 
     while (!q.empty() && out.size() < k) {

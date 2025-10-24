@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -9,45 +10,45 @@ typedef int WordID;
 
 
 template <typename TType>
-void autocomplete(const TType& trie, const std::string& prefix) {
-    using clock = std::chrono::high_resolution_clock;
+void autocomplete(const TType& trie, const string& prefix) {
+    using clock = chrono::high_resolution_clock;
 
     if (prefix.empty()) {
-        std::cout << "Autocompletat: cal un prefix no buit.\n";
+        cout << "Autocompletat: cal un prefix no buit.\n";
         return;
     }
 
     auto t0 = clock::now();
     trie.reset_visited();
-    std::vector<WordID> ids = trie.complete_prefix_topk(prefix, 5); // profundidad 1,2,3... hasta 5 resultados
+    vector<WordID> ids = trie.complete_prefix_topk(prefix, 5); 
     size_t visited = trie.last_visited();
     auto t1 = clock::now();
-    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+    auto ns = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
 
     if (ids.empty()) {
-        std::cout << "Autocompletat: no hi ha cap paraula que comenci per '"
+        cout << "Autocompletat: no hi ha cap paraula que comenci per '"
                   << prefix << "'.\n";
-        std::cout << "Temps: " << ns << " ns | Nodes visitats: " << visited << "\n";
+        cout << "Temps: " << ns << " ns | Nodes visitats: " << visited << "\n";
         return;
     }
 
-    std::cout << "Suggeriments (prefix '" << prefix << "', per menor profunditat):\n";
+    cout << "Suggeriments (prefix '" << prefix << "', per menor profunditat):\n";
     for (size_t i = 0; i < ids.size(); ++i) {
-        std::cout << "  " << (i+1) << ") " << trie.word_of(ids[i]) << "\n";
+        cout << "  " << (i+1) << ") " << trie.word_of(ids[i]) << "\n";
     }
-    std::cout << "Temps: " << ns << " ns | Nodes visitats: " << visited << "\n";
+    cout << "Temps: " << ns << " ns | Nodes visitats: " << visited << "\n";
 }
 
 template <typename TType>
 void search_word(const TType& trie, const string& word) {
     if (word.empty()) { cout << "Consulta vacía.\n"; return; }
 
-    auto t0 = std::chrono::high_resolution_clock::now();
+    auto t0 = chrono::high_resolution_clock::now();
     trie.reset_visited();
     WordID id = trie.search(word);
     size_t visited = trie.last_visited();
-    auto t1 = std::chrono::high_resolution_clock::now();
-    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+    auto t1 = chrono::high_resolution_clock::now();
+    auto ns = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
 
     if (id == -1) {
         cout << "No se ha encontrado la palabra '" << word << "' en el texto.\n";
@@ -68,7 +69,7 @@ void search_word(const TType& trie, const string& word) {
 
 template <typename TType>
 void search_phrase(const TType& trie, const string& phrase) {
-    using clock = std::chrono::high_resolution_clock;
+    using clock = chrono::high_resolution_clock;
     auto t0_total = clock::now();
     size_t visited_total = 0;
 
@@ -84,7 +85,7 @@ void search_phrase(const TType& trie, const string& phrase) {
             visited_total += trie.last_visited();
             if (id == -1) {
                 auto t1_total = clock::now();
-                auto ns_total = std::chrono::duration_cast<std::chrono::nanoseconds>(t1_total - t0_total).count();
+                auto ns_total = chrono::duration_cast<chrono::nanoseconds>(t1_total - t0_total).count();
                 cout << "No se ha encontrado la frase '" << phrase << "' en el texto.\n";
                 cout << "Tiempo: " << ns_total << " ns | Nodos visitados: " << visited_total << "\n";
                 return;
@@ -95,7 +96,7 @@ void search_phrase(const TType& trie, const string& phrase) {
 
     if (wordIDs.empty()) {
         auto t1_total = clock::now();
-        auto ns_total = std::chrono::duration_cast<std::chrono::nanoseconds>(t1_total - t0_total).count();
+        auto ns_total = chrono::duration_cast<chrono::nanoseconds>(t1_total - t0_total).count();
         cout << "Consulta vacía.\n";
         cout << "Tiempo: " << ns_total << " ns | Nodos visitados: " << visited_total << "\n";
         return;
@@ -132,7 +133,7 @@ void search_phrase(const TType& trie, const string& phrase) {
     }
 
     auto t1_total = clock::now();
-    auto ns_total = std::chrono::duration_cast<std::chrono::nanoseconds>(t1_total - t0_total).count();
+    auto ns_total = chrono::duration_cast<chrono::nanoseconds>(t1_total - t0_total).count();
 
     if (result_lines.empty()) {
         cout << "No se ha encontrado la frase '" << phrase << "' en el texto.\n";
@@ -152,13 +153,13 @@ void search_phrase(const TType& trie, const string& phrase) {
 
 template <typename TType>
 void search_prefix(const TType& trie, const string& prefix) { 
-    using clock = std::chrono::high_resolution_clock;
+    using clock = chrono::high_resolution_clock;
     auto t0 = clock::now();
     trie.reset_visited();
     vector<WordID> wordIDs = trie.explore_subtree(prefix);
     size_t visited = trie.last_visited();
     auto t1 = clock::now();
-    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+    auto ns = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
 
     int numLines = 0;
     cout << "Se ha encontrado el prefijo '" << prefix << "' en las línea(s): [";

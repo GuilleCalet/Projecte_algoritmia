@@ -1,21 +1,12 @@
-// =========================
-// RadixTrie.hh
-// =========================
-#include <string>
-#include <vector>
-#include <array>
-#include <unordered_map>
-#include <queue>
-#include <functional>
+#pragma once
 #include "Match.hh"
 
-using namespace std;
 
 typedef int WordID;
 
 class RadixTrie {
 private:
-  struct Node; // fwd
+  struct Node; 
 
   // Estructura de una arista del Trie
   struct Edge {
@@ -33,23 +24,9 @@ private:
 
   unordered_map<WordID, vector<Match>> table_; // tabla de tuplas (line,pos) para cada ocurrencia de cada palabra del texto
   
-  // *** NUEVO ***
+  //diccionario id -> palabra
   unordered_map<WordID, string> lexicon_;
 
-  static inline int ctoi(char ch) {
-    unsigned char uch = static_cast<unsigned char>(ch);
-    return tolower(uch) - 'a';
-  }
-
-  static size_t lcp(const string& a, const string& b); // longest common prefix
-  static size_t matchLabel(const string& w, size_t i, const string& label); // longest common prefix
-
-
-  // Utilidades de gestión de memoria/estructura
-  static void destroy(Node* n);
-  static bool hasChild(const Node* n);
-
-    // ---- MÉTRICAS INTERNAS ----
   size_t count_nodes_rec(const Node* n) const;
   size_t memory_bytes_rec(const Node* n) const;
 
@@ -58,10 +35,7 @@ private:
 
 public:
   RadixTrie();
-  ~RadixTrie();
 
-  // Retorna el vector de ocurrencias (line,pos) de una palabra identificada por id
-  vector<Match> occurrences(WordID id) const;
 
   // Añade una nueva ocurrencia (line,pos) de la palabra identificada por id
   void add_occur(WordID id, int line, long long pos);
@@ -80,10 +54,9 @@ public:
 
   vector<int> explore_subtree(const string& prefix) const;
 
-  std::vector<WordID> complete_prefix_topk(const std::string& prefix, size_t k) const;
+  vector<WordID> complete_prefix_topk(const string& prefix, size_t k) const;
 
 
-  // ---- API DE MÉTRICAS ----
   size_t node_count() const;
   size_t memory_bytes_estimate() const;
 
@@ -92,7 +65,6 @@ public:
     return (it == lexicon_.end()) ? string() : it->second;
   }
 
-  // ---- Instrumentación de visitas por operación ----
   void reset_visited() const { visited_nodes_ = 0; }
   size_t last_visited() const { return visited_nodes_; }
 };

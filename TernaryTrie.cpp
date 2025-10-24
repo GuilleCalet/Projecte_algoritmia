@@ -1,7 +1,5 @@
 #include "TernaryTrie.hh"
-#include <algorithm>
 
-using namespace std;
 
 // Inserta la palabra y añade su ocurrencia
 void TernaryTrie::insert(const string& word, WordID id, int line, long long pos) {
@@ -68,7 +66,7 @@ vector<int> TernaryTrie::explore_subtree(const string& prefix) const {
   if (!root) return wordIDs;
 
   if (prefix.empty()) {
-    std::stack<const Node*> st;
+    stack<const Node*> st;
     st.push(root);
     while (!st.empty()) {
       auto n = st.top(); st.pop();
@@ -103,7 +101,7 @@ vector<int> TernaryTrie::explore_subtree(const string& prefix) const {
   if (p->wordID != -1) wordIDs.push_back(p->wordID);
 
   // explorar continuaciones bajo 'eq'
-  std::stack<const Node*> st;
+  stack<const Node*> st;
   st.push(p->eq);
   while (!st.empty()) {
     auto n = st.top(); st.pop();
@@ -117,11 +115,11 @@ vector<int> TernaryTrie::explore_subtree(const string& prefix) const {
   return wordIDs;
 }
 
-std::vector<WordID> TernaryTrie::complete_prefix_topk(const std::string& prefix, size_t k) const {
-    std::vector<WordID> out;
+vector<WordID> TernaryTrie::complete_prefix_topk(const string& prefix, size_t k) const {
+    vector<WordID> out;
     visited_nodes_ = 0;
 
-    // 1) Descenso al último carácter del prefijo
+    // 1) bajar al nodo del ÚLTIMO carácter del prefijo
     const Node* n = root;
     size_t i = 0;
     while (n && i < prefix.size()) {
@@ -129,31 +127,85 @@ std::vector<WordID> TernaryTrie::complete_prefix_topk(const std::string& prefix,
         if (prefix[i] < n->c)      n = n->lo;
         else if (prefix[i] > n->c) n = n->hi;
         else {
-            if (i + 1 == prefix.size()) break;  // 'n' es el nodo del último char del prefijo
+            if (i + 1 == prefix.size()) break; // 'n' es el nodo del último char del prefijo
             n = n->eq; ++i;
         }
     }
     if (!n || i + 1 != prefix.size()) return out;
 
-    // 2) BFS por capas: capa 1 comienza en n->eq
-    struct Item { const Node* node; int depth; };
-    std::queue<Item> q;
-    if (n->eq) q.push({n->eq, 1});
+    // 2) capas: capa 1 = todos los nodos alcanzables tras +1 carácter (arranca en n->eq)
+    vector<const Node*> current;
+    if (n->eq) current.push_back(n->eq);
 
-    while (!q.empty() && out.size() < k) {
-        Item cur = q.front(); q.pop();
-        ++visited_nodes_;
+    while (!current.empty() && out.size() < k) {
+        // Recorremos TODO el bosque de esta capa SOLO por lo/hi (misma profundidad).
+        // Y recogemos los eq para la próxima capa.
+        vector<const Node*> next;
+        stack<const Node*> st;
 
-        if (cur.node->wordID != -1) {
-            out.push_back(cur.node->wordID);
-            if (out.size() >= k) break;
+        for (const Node* seed : current) if (seed) st.push(seed);
+
+        while (!st.empty() && out.size() < k) {
+            const Node* u = st.top(); st.pop();
+            ++visited_nodes_;
+
+            if (u->wordID != -1) {
+                // Palabra encontrada EXACTAMENTE a esta profundidad
+                auto it = lexicon_.find(u->wordID);
+                if (it != lexicon_.end() && !it->second.empty()) {
+                    out.push_back(u->wordID);
+                    if (out.size() >= k) break;
+                }
+            }
+            // misma profundidad: explorar lo/hi
+            if (u->lo) st.push(u->lo);
+            if (u->hi) st.push(u->hi);
+            // siguiente capa: guardar eq
+            if (u->eq) next.push_back(u->eq);
         }
-        // Misma profundidad: lo / hi
-        if (cur.node->lo) q.push({cur.node->lo, cur.depth});
-        if (cur.node->hi) q.push({cur.node->hi, cur.depth});
-        // Profundidad siguiente: eq
-        if (cur.node->eq) q.push({cur.node->eq, cur.depth + 1});
+
+        current.swap(next); // siguiente profundidad (+1 carácter)
     }
 
     return out;
 }
+
+  void TernaryTrie::add_occur(WordID id, int line, long long pos) {
+    table_[id].push_back(Match{line,pos});
+  }
+  vector<int> TernaryTrie::get_lines(WordID id) const {
+    auto it = table_.find(id);
+    if (it == table_.end()) return {};
+    vector<int> out;
+    out.reserve(it->second.size());
+    for (const auto& m : it->second) out.push_back(m.line);
+    return out;
+  }
+  vector<long long> TernaryTrie::get_positions(WordID id) const {
+    auto it = table_.find(id);
+    if (it == table_.end()) return {};
+    vector<long long> out;
+    out.reserve(it->second.size());
+    for (const auto& m : it->second) out.push_back(m.pos);
+    return out;
+  }
+
+   size_t TernaryTrie::count_nodes_rec(const Node* n) const {
+    if (!n) return 0;
+    return 1 + count_nodes_rec(n->lo)
+             + count_nodes_rec(n->eq)
+             + count_nodes_rec(n->hi);
+  }
+ 
+  size_t TernaryTrie::memory_bytes_rec(const Node* n) const {
+    if (!n) return 0;
+    size_t bytes = sizeof(*n);                  // char + 3 punteros + int
+    bytes += memory_bytes_rec(n->lo);
+    bytes += memory_bytes_rec(n->eq);
+    bytes += memory_bytes_rec(n->hi);
+    return bytes;
+  }
+
+  size_t TernaryTrie::memory_bytes_estimate() const {
+    return memory_bytes_rec(root) + sizeof(*this) - sizeof(root);
+  }

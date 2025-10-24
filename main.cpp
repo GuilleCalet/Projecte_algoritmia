@@ -57,6 +57,7 @@ void index_and_insert(const string& word, int line, long long& pos) {
         else { 
             RT.add_occur(id, line, pos);
         }
+        break;
      // Mismo procedimiento pero para TernaryTrie
      case TERNARY_TRIE:
         id = TST.search(word);
@@ -176,10 +177,10 @@ int main(int argc, char* argv[]) {
     cout << endl;
 
     // Leer el archivo de entrada y generar estructuras de búsqueda
-    auto t0 = std::chrono::high_resolution_clock::now();
+    auto t0 = chrono::high_resolution_clock::now();
     read_file(argv[1]);  // Leer el archivo
-    auto t1 = std::chrono::high_resolution_clock::now();
-    auto ns = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+    auto t1 = chrono::high_resolution_clock::now();
+    auto ns = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
     cout << "Generar el árbol ha tardado " << ns << " ms" << endl;
 
     switch (typeTrie) {
